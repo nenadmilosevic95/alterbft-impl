@@ -38,7 +38,8 @@ var topology string
 var semanticFiltering bool
 
 var model string
-var syncDelta int
+var smallDelta int
+var bigDelta int
 
 var coolTime int
 
@@ -70,7 +71,8 @@ func init() {
 	// Agent setup
 	flag.IntVar(&capacity, "cap", 1024, "Capacity of all storages.")
 	flag.IntVar(&fvcap, "fvcap", 1024, "Full value storage capacity.")
-	flag.IntVar(&syncDelta, "delta", 1000, "Sync delta in milliseconds.")
+	flag.IntVar(&smallDelta, "s-delta", 150, "Sync delta in milliseconds.")
+	flag.IntVar(&bigDelta, "b-delta", 1000, "Sync delta in milliseconds.")
 	flag.IntVar(&coolTime, "cool", 10, "Cool down time in seconds.")
 	// Host and discovery setup
 	flag.StringVar(&listenAddr, "l", "",
@@ -121,7 +123,8 @@ func main() {
 
 	log.Printf("Model: %v\n", model)
 
-	log.Printf("Sync delta: %v\n", syncDelta)
+	log.Printf("Small delta: %v\n", smallDelta)
+	log.Printf("Big delta: %v\n", bigDelta)
 
 	log.Printf("Number of byzantines: %v\n", numByzantines)
 
@@ -221,7 +224,8 @@ func main() {
 	config.VerifySignatures = true
 	config.Log = log
 	config.StatsPublishingInterval = 5 * time.Second
-	config.TimeoutSyncDelta = time.Duration(syncDelta) * time.Millisecond
+	config.TimeoutSmallDelta = time.Duration(smallDelta) * time.Millisecond
+	config.TimeoutBigDelta = time.Duration(bigDelta) * time.Millisecond
 	config.Model = model
 	config.MaxEpochToStart = maxEpoch
 	if randomSeed == 0 {

@@ -240,17 +240,17 @@ func (p *Process) GetValue() []byte {
 
 // TimeoutPropose returns the timeout duration within which proposer should propose.
 func (p *Process) TimeoutPropose(epoch int64) time.Duration {
-	return 2 * p.config.TimeoutSyncDelta
+	return p.config.TimeoutSmallDelta + p.config.TimeoutBigDelta
 }
 
 // TimeoutEquivocation returns the timeout duration we need to detect equivocation.
 func (p *Process) TimeoutEquivocation(epoch int64) time.Duration {
-	return 2 * p.config.TimeoutSyncDelta
+	return 2 * p.config.TimeoutSmallDelta
 }
 
 // TimeoutQuitEpoch returns the timeout duration of QuitEpochStep.
 func (p *Process) TimeoutQuitEpoch(epoch int64) time.Duration {
-	return 2 * p.config.TimeoutSyncDelta
+	return 2 * p.config.TimeoutSmallDelta
 }
 
 // StatsQueue returns the queue to which stats are periodically published.

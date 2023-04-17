@@ -72,7 +72,8 @@ type Config struct {
 	PublicKeys []crypto.PublicKey
 
 	// Defining maximum communication delay in synchronous system.
-	TimeoutSyncDelta time.Duration
+	TimeoutSmallDelta time.Duration
+	TimeoutBigDelta   time.Duration
 
 	// If set, defines the interval for publishing process stats.
 	StatsPublishingInterval time.Duration
@@ -97,7 +98,8 @@ func DefaultConfig() *Config {
 		SignatureGenerationThreads:   0,
 		SignatureVerificationThreads: 0,
 
-		ScheduleTimeouts: true,
-		TimeoutSyncDelta: time.Second,
+		ScheduleTimeouts:  true,
+		TimeoutSmallDelta: time.Second / 5,
+		TimeoutBigDelta:   time.Second,
 	}
 }
