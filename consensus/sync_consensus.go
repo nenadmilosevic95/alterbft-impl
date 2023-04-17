@@ -178,7 +178,7 @@ func (c *AlterBFT) tryToVote() {
 			c.Process.Forward(proposal)
 			c.Process.Forward(proposerVote)
 		}
-		c.broadcastVote(VOTE, proposal.Block.BlockID())
+		c.broadcastVote(VOTE, proposal.Block)
 		c.hasVoted = true
 	}
 }
@@ -373,7 +373,7 @@ func (c *AlterBFT) broadcastProposal() {
 	var prevBlockID BlockID
 	var height int64 = MIN_HEIGHT
 	if c.validCertificate != nil {
-		prevBlockID = c.validCertificate.blockID
+		prevBlockID = c.validCertificate.BlockID()
 		height = c.validCertificate.Height + 1
 	}
 	block := &Block{
@@ -394,11 +394,12 @@ func (c *AlterBFT) broadcastProposal() {
 	c.Process.Broadcast(vote)
 }
 
-func (c *AlterBFT) broadcastVote(voteType int16, blockID BlockID) {
+func (c *AlterBFT) broadcastVote(voteType int16, block *Block) {
 	vote := &Message{
 		Type:    voteType,
 		Epoch:   c.Epoch,
-		BlockID: blockID,
+		BlockID: block.BlockID(),
+		Height:  block.Height,
 		Sender:  c.Process.ID(),
 	}
 	//fmt.Printf("Process %v (%v) epoch %v vote for value %v\n", c.Process.ID(), c.Process.ID()%5, c.Epoch, vote.BlockID[0:4])

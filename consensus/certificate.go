@@ -207,7 +207,6 @@ func (c *Certificate) ReconstructMessage(sender int) *Message {
 	if signature, ok := c.Signatures[sender]; ok {
 		if c.Type == BLOCK_CERT {
 			message = NewVoteMessage(c.Epoch, c.BlockID(), c.Height, int16(sender))
-
 		}
 		if c.Type == SILENCE_CERT {
 			message = NewSilenceMessage(c.Epoch, int16(sender))
