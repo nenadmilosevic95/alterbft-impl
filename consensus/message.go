@@ -122,7 +122,7 @@ func MessageFromBytes(buffer []byte) *Message {
 		copy(payload[:8], buffer[2:10])
 		block.BlockID().MarshallTo(payload[8:])
 	case VOTE:
-		epoch = int64(encoding.Uint64(buffer[index:]))
+		height = int64(encoding.Uint64(buffer[index:]))
 		index += 8
 		blockID = BlockIDFromBytes(buffer[index:])
 		index += BlockIDSize
