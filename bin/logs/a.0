@@ -1,0 +1,336 @@
+11:48:35.282744 p0 Log started
+00.000000 p0 Topology: full
+00.000007 p0 Model: sync
+00.000009 p0 Block size:1024B
+00.001462 p0 host: {12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw: [/ip4/127.0.0.1/tcp/56854]}
+00.001542 p0 [transport] broadcast queue size: 32
+00.001546 p0 [transport] delivery queue size: 8192
+00.001661 p0 [transport] receive queue size: 524288 drop messages: false
+00.001686 p0 [transport] send queues size: 65536 drop messages: false
+00.014835 p0 Found 1 peers in 13.126106ms
+00.014847 p0 random seed: 0 (experiment ID)
+00.014865 p0 Connecting to 0 peers
+00.014880 p0 Connected to 0 peers after 33.025µs
+00.015165 p0 Created Tendermint process
+00.015200 p0 Bootstraped process in 30.687µs
+00.015221 p0 Started producing values
+00.015341 p0 Workload generator started, maximum duration: 25s
+00.015350 p0 Logging deliveries to file '/Users/nenadmilosevic/Projects/tendermints/bin/logs/deliveries.0' buffer size 1048576
+Process 0 (0) epoch 0 vote for value [175 85 112 245]
+DeltaStat(0): 218.347µs 218.347µs 218.347µs 218.347µs
+Process 0 (0) epoch 1 vote for value [183 88 34 101]
+DeltaStat(1): 164.124µs 164.124µs 164.124µs 164.124µs
+Process 0 (0) epoch 2 vote for value [254 98 251 17]
+DeltaStat(2): 184.79µs 184.79µs 184.79µs 184.79µs
+Process 0 (0) epoch 3 vote for value [18 180 200 8]
+DeltaStat(3): 155.912µs 155.912µs 155.912µs 155.912µs
+Process 0 (0) epoch 4 vote for value [118 102 46 246]
+DeltaStat(4): 179.327µs 179.327µs 179.327µs 179.327µs
+Process 0 (0) epoch 5 vote for value [243 139 166 162]
+DeltaStat(5): 134.059µs 134.059µs 134.059µs 134.059µs
+Process 0 (0) epoch 6 vote for value [153 90 51 130]
+DeltaStat(6): 148.283µs 148.283µs 148.283µs 148.283µs
+Process 0 (0) epoch 7 vote for value [180 39 144 60]
+DeltaStat(7): 114.76µs 114.76µs 114.76µs 114.76µs
+Process 0 (0) epoch 8 vote for value [246 2 214 165]
+DeltaStat(8): 141.208µs 141.208µs 141.208µs 141.208µs
+Process 0 (0) epoch 9 vote for value [86 0 42 101]
+DeltaStat(9): 165.205µs 165.205µs 165.205µs 165.205µs
+Process 0 (0) epoch 10 vote for value [50 34 94 181]
+DeltaStat(10): 136.45µs 136.45µs 136.45µs 136.45µs
+Process 0 (0) epoch 11 vote for value [113 6 191 161]
+DeltaStat(11): 174.431µs 174.431µs 174.431µs 174.431µs
+Process 0 (0) epoch 12 vote for value [157 133 110 161]
+DeltaStat(12): 135.018µs 135.018µs 135.018µs 135.018µs
+Process 0 (0) epoch 13 vote for value [123 246 166 238]
+DeltaStat(13): 197.208µs 197.208µs 197.208µs 197.208µs
+Process 0 (0) epoch 14 vote for value [15 36 14 1]
+DeltaStat(14): 122.587µs 122.587µs 122.587µs 122.587µs
+Process 0 (0) epoch 15 vote for value [201 84 244 171]
+DeltaStat(15): 179.931µs 179.931µs 179.931µs 179.931µs
+Process 0 (0) epoch 16 vote for value [12 165 187 114]
+DeltaStat(16): 152.723µs 152.723µs 152.723µs 152.723µs
+Process 0 (0) epoch 17 vote for value [82 180 22 236]
+DeltaStat(17): 146.04µs 146.04µs 146.04µs 146.04µs
+Process 0 (0) epoch 18 vote for value [175 151 50 49]
+DeltaStat(18): 164.292µs 164.292µs 164.292µs 164.292µs
+Process 0 (0) epoch 19 vote for value [34 235 242 211]
+DeltaStat(19): 151.673µs 151.673µs 151.673µs 151.673µs
+Process 0 (0) epoch 20 vote for value [191 36 97 50]
+DeltaStat(20): 181.508µs 181.508µs 181.508µs 181.508µs
+Process 0 (0) epoch 21 vote for value [233 169 238 143]
+DeltaStat(21): 183.913µs 183.913µs 183.913µs 183.913µs
+Process 0 (0) epoch 22 vote for value [118 159 15 250]
+DeltaStat(22): 210.081µs 210.081µs 210.081µs 210.081µs
+Process 0 (0) epoch 23 vote for value [19 5 16 236]
+DeltaStat(23): 274.729µs 274.729µs 274.729µs 274.729µs
+Process 0 (0) epoch 24 vote for value [193 231 229 62]
+DeltaStat(24): 356.01µs 356.01µs 356.01µs 356.01µs
+Process 0 (0) epoch 25 vote for value [171 170 225 134]
+DeltaStat(25): 357.309µs 357.309µs 357.309µs 357.309µs
+Process 0 (0) epoch 26 vote for value [3 248 55 114]
+DeltaStat(26): 273.685µs 273.685µs 273.685µs 273.685µs
+Process 0 (0) epoch 27 vote for value [79 222 166 227]
+DeltaStat(27): 266.427µs 266.427µs 266.427µs 266.427µs
+Process 0 (0) epoch 28 vote for value [251 43 117 71]
+DeltaStat(28): 242.421µs 242.421µs 242.421µs 242.421µs
+Process 0 (0) epoch 29 vote for value [194 109 69 231]
+DeltaStat(29): 282.474µs 282.474µs 282.474µs 282.474µs
+Process 0 (0) epoch 30 vote for value [214 130 131 155]
+DeltaStat(30): 181.336µs 181.336µs 181.336µs 181.336µs
+Process 0 (0) epoch 31 vote for value [34 195 176 141]
+DeltaStat(31): 169.183µs 169.183µs 169.183µs 169.183µs
+Process 0 (0) epoch 32 vote for value [227 189 106 220]
+DeltaStat(32): 160.819µs 160.819µs 160.819µs 160.819µs
+Process 0 (0) epoch 33 vote for value [231 132 29 18]
+DeltaStat(33): 210.11µs 210.11µs 210.11µs 210.11µs
+Process 0 (0) epoch 34 vote for value [54 203 236 24]
+DeltaStat(34): 154.007µs 154.007µs 154.007µs 154.007µs
+Process 0 (0) epoch 35 vote for value [162 48 248 210]
+DeltaStat(35): 167.807µs 167.807µs 167.807µs 167.807µs
+Process 0 (0) epoch 36 vote for value [182 236 157 103]
+DeltaStat(36): 189.75µs 189.75µs 189.75µs 189.75µs
+Process 0 (0) epoch 37 vote for value [238 207 242 67]
+DeltaStat(37): 200.305µs 200.305µs 200.305µs 200.305µs
+Process 0 (0) epoch 38 vote for value [18 170 161 227]
+DeltaStat(38): 151.059µs 151.059µs 151.059µs 151.059µs
+Process 0 (0) epoch 39 vote for value [167 234 54 111]
+DeltaStat(39): 221.615µs 221.615µs 221.615µs 221.615µs
+Process 0 (0) epoch 40 vote for value [86 221 208 58]
+DeltaStat(40): 162.084µs 162.084µs 162.084µs 162.084µs
+Process 0 (0) epoch 41 vote for value [31 160 89 25]
+DeltaStat(41): 330.429µs 330.429µs 330.429µs 330.429µs
+Process 0 (0) epoch 42 vote for value [151 78 134 157]
+DeltaStat(42): 335.882µs 335.882µs 335.882µs 335.882µs
+Process 0 (0) epoch 43 vote for value [13 55 53 159]
+DeltaStat(43): 184.576µs 184.576µs 184.576µs 184.576µs
+Process 0 (0) epoch 44 vote for value [133 114 31 27]
+DeltaStat(44): 182.018µs 182.018µs 182.018µs 182.018µs
+Process 0 (0) epoch 45 vote for value [14 223 68 183]
+DeltaStat(45): 206.327µs 206.327µs 206.327µs 206.327µs
+Process 0 (0) epoch 46 vote for value [237 237 252 169]
+DeltaStat(46): 192.006µs 192.006µs 192.006µs 192.006µs
+Process 0 (0) epoch 47 vote for value [155 16 139 75]
+DeltaStat(47): 213.995µs 213.995µs 213.995µs 213.995µs
+Process 0 (0) epoch 48 vote for value [242 189 246 248]
+DeltaStat(48): 219.82µs 219.82µs 219.82µs 219.82µs
+Process 0 (0) epoch 49 vote for value [98 101 197 146]
+DeltaStat(49): 220.805µs 220.805µs 220.805µs 220.805µs
+Process 0 (0) epoch 50 vote for value [152 20 143 238]
+DeltaStat(50): 235.646µs 235.646µs 235.646µs 235.646µs
+Process 0 (0) epoch 51 vote for value [199 174 251 224]
+DeltaStat(51): 396.888µs 396.888µs 396.888µs 396.888µs
+Process 0 (0) epoch 52 vote for value [80 32 153 107]
+DeltaStat(52): 264.154µs 264.154µs 264.154µs 264.154µs
+Process 0 (0) epoch 53 vote for value [99 191 183 61]
+DeltaStat(53): 191.034µs 191.034µs 191.034µs 191.034µs
+Process 0 (0) epoch 54 vote for value [146 251 145 232]
+DeltaStat(54): 206.32µs 206.32µs 206.32µs 206.32µs
+Process 0 (0) epoch 55 vote for value [244 71 19 135]
+DeltaStat(55): 145.403µs 145.403µs 145.403µs 145.403µs
+Process 0 (0) epoch 56 vote for value [58 24 62 75]
+DeltaStat(56): 202.417µs 202.417µs 202.417µs 202.417µs
+Process 0 (0) epoch 57 vote for value [113 17 240 167]
+DeltaStat(57): 280.341µs 280.341µs 280.341µs 280.341µs
+Process 0 (0) epoch 58 vote for value [52 203 229 74]
+DeltaStat(58): 171.565µs 171.565µs 171.565µs 171.565µs
+Process 0 (0) epoch 59 vote for value [31 187 32 18]
+DeltaStat(59): 177.77µs 177.77µs 177.77µs 177.77µs
+Process 0 (0) epoch 60 vote for value [247 75 88 170]
+DeltaStat(60): 159.674µs 159.674µs 159.674µs 159.674µs
+Process 0 (0) epoch 61 vote for value [124 63 32 121]
+DeltaStat(61): 150.795µs 150.795µs 150.795µs 150.795µs
+Process 0 (0) epoch 62 vote for value [117 51 162 27]
+DeltaStat(62): 164.361µs 164.361µs 164.361µs 164.361µs
+Process 0 (0) epoch 63 vote for value [153 62 151 168]
+DeltaStat(63): 168.659µs 168.659µs 168.659µs 168.659µs
+Process 0 (0) epoch 64 vote for value [213 14 170 208]
+DeltaStat(64): 158.259µs 158.259µs 158.259µs 158.259µs
+Process 0 (0) epoch 65 vote for value [197 21 76 31]
+DeltaStat(65): 166.921µs 166.921µs 166.921µs 166.921µs
+Process 0 (0) epoch 66 vote for value [21 54 89 83]
+DeltaStat(66): 154.93µs 154.93µs 154.93µs 154.93µs
+Process 0 (0) epoch 67 vote for value [239 169 187 231]
+DeltaStat(67): 143.296µs 143.296µs 143.296µs 143.296µs
+Process 0 (0) epoch 68 vote for value [247 180 123 88]
+DeltaStat(68): 290.105µs 290.105µs 290.105µs 290.105µs
+Process 0 (0) epoch 69 vote for value [149 39 88 98]
+DeltaStat(69): 328.577µs 328.577µs 328.577µs 328.577µs
+Process 0 (0) epoch 70 vote for value [155 2 142 107]
+DeltaStat(70): 228.289µs 228.289µs 228.289µs 228.289µs
+Process 0 (0) epoch 71 vote for value [29 238 232 159]
+DeltaStat(71): 249.73µs 249.73µs 249.73µs 249.73µs
+Process 0 (0) epoch 72 vote for value [195 183 250 119]
+DeltaStat(72): 140.498µs 140.498µs 140.498µs 140.498µs
+Process 0 (0) epoch 73 vote for value [217 109 106 66]
+DeltaStat(73): 150.004µs 150.004µs 150.004µs 150.004µs
+Process 0 (0) epoch 74 vote for value [120 167 56 228]
+DeltaStat(74): 137.611µs 137.611µs 137.611µs 137.611µs
+Process 0 (0) epoch 75 vote for value [114 31 199 189]
+DeltaStat(75): 161.544µs 161.544µs 161.544µs 161.544µs
+Process 0 (0) epoch 76 vote for value [227 102 186 45]
+DeltaStat(76): 153.513µs 153.513µs 153.513µs 153.513µs
+Process 0 (0) epoch 77 vote for value [31 247 11 205]
+DeltaStat(77): 146.151µs 146.151µs 146.151µs 146.151µs
+Process 0 (0) epoch 78 vote for value [173 22 172 59]
+DeltaStat(78): 143.912µs 143.912µs 143.912µs 143.912µs
+Process 0 (0) epoch 79 vote for value [58 130 49 50]
+DeltaStat(79): 150.81µs 150.81µs 150.81µs 150.81µs
+Process 0 (0) epoch 80 vote for value [20 253 75 12]
+DeltaStat(80): 139.847µs 139.847µs 139.847µs 139.847µs
+Process 0 (0) epoch 81 vote for value [172 159 208 53]
+DeltaStat(81): 163.748µs 163.748µs 163.748µs 163.748µs
+Process 0 (0) epoch 82 vote for value [12 18 107 86]
+DeltaStat(82): 159.459µs 159.459µs 159.459µs 159.459µs
+Process 0 (0) epoch 83 vote for value [78 111 125 86]
+DeltaStat(83): 178.63µs 178.63µs 178.63µs 178.63µs
+Process 0 (0) epoch 84 vote for value [124 119 99 111]
+DeltaStat(84): 166.929µs 166.929µs 166.929µs 166.929µs
+Process 0 (0) epoch 85 vote for value [175 224 36 54]
+DeltaStat(85): 151.636µs 151.636µs 151.636µs 151.636µs
+Process 0 (0) epoch 86 vote for value [254 11 157 161]
+DeltaStat(86): 147.471µs 147.471µs 147.471µs 147.471µs
+Process 0 (0) epoch 87 vote for value [108 39 71 202]
+DeltaStat(87): 173.864µs 173.864µs 173.864µs 173.864µs
+Process 0 (0) epoch 88 vote for value [190 151 174 9]
+DeltaStat(88): 146.653µs 146.653µs 146.653µs 146.653µs
+Process 0 (0) epoch 89 vote for value [240 153 245 162]
+DeltaStat(89): 138.467µs 138.467µs 138.467µs 138.467µs
+Process 0 (0) epoch 90 vote for value [80 254 118 191]
+DeltaStat(90): 142.823µs 142.823µs 142.823µs 142.823µs
+Process 0 (0) epoch 91 vote for value [253 57 171 193]
+DeltaStat(91): 179.252µs 179.252µs 179.252µs 179.252µs
+Process 0 (0) epoch 92 vote for value [122 2 34 111]
+DeltaStat(92): 216.052µs 216.052µs 216.052µs 216.052µs
+Process 0 (0) epoch 93 vote for value [92 233 101 32]
+DeltaStat(93): 150.403µs 150.403µs 150.403µs 150.403µs
+Process 0 (0) epoch 94 vote for value [188 237 60 170]
+DeltaStat(94): 173.274µs 173.274µs 173.274µs 173.274µs
+Process 0 (0) epoch 95 vote for value [108 118 68 74]
+DeltaStat(95): 127.329µs 127.329µs 127.329µs 127.329µs
+Process 0 (0) epoch 96 vote for value [73 7 127 33]
+DeltaStat(96): 140.664µs 140.664µs 140.664µs 140.664µs
+Process 0 (0) epoch 97 vote for value [222 11 251 121]
+DeltaStat(97): 142.052µs 142.052µs 142.052µs 142.052µs
+Process 0 (0) epoch 98 vote for value [192 115 71 15]
+DeltaStat(98): 142.512µs 142.512µs 142.512µs 142.512µs
+Process 0 (0) epoch 99 vote for value [12 9 191 74]
+DeltaStat(99): 137.408µs 137.408µs 137.408µs 137.408µs
+00.040774 p0 Not starting epoch 100 MaxEpochToStart: 100
+01.018013 p0 No delivery for 2562047h47m16.854775807s
+01.018038 p0 Process [100 0 100 0 0 100 0 0] [100 0 0] [0 0]
+02.018743 p0 Process [0 0 0 0 0 0 0 0] [0 0 0] [0 0]
+02.018756 p0 No delivery for 2562047h47m16.854775807s
+Process 0 epoch 0 lock+decision value [175 85 112 245]
+Process 0 epoch 1 lock+decision value [183 88 34 101]
+Process 0 epoch 2 lock+decision value [254 98 251 17]
+Process 0 epoch 3 lock+decision value [18 180 200 8]
+Process 0 epoch 4 lock+decision value [118 102 46 246]
+Process 0 epoch 5 lock+decision value [243 139 166 162]
+02.018821 p0 Empty value decided at height 0 epoch 0
+Process 0 epoch 6 lock+decision value [153 90 51 130]
+Process 0 epoch 7 lock+decision value [180 39 144 60]
+Process 0 epoch 8 lock+decision value [246 2 214 165]
+Process 0 epoch 9 lock+decision value [86 0 42 101]
+Process 0 epoch 10 lock+decision value [50 34 94 181]
+Process 0 epoch 11 lock+decision value [113 6 191 161]
+Process 0 epoch 12 lock+decision value [157 133 110 161]
+Process 0 epoch 13 lock+decision value [123 246 166 238]
+Process 0 epoch 14 lock+decision value [15 36 14 1]
+Process 0 epoch 15 lock+decision value [201 84 244 171]
+Process 0 epoch 16 lock+decision value [12 165 187 114]
+Process 0 epoch 17 lock+decision value [82 180 22 236]
+02.019224 p0 Empty value decided at height 17 epoch 17
+Process 0 epoch 18 lock+decision value [175 151 50 49]
+Process 0 epoch 19 lock+decision value [34 235 242 211]
+Process 0 epoch 20 lock+decision value [191 36 97 50]
+Process 0 epoch 21 lock+decision value [233 169 238 143]
+Process 0 epoch 22 lock+decision value [118 159 15 250]
+Process 0 epoch 23 lock+decision value [19 5 16 236]
+Process 0 epoch 24 lock+decision value [193 231 229 62]
+Process 0 epoch 25 lock+decision value [171 170 225 134]
+Process 0 epoch 26 lock+decision value [3 248 55 114]
+Process 0 epoch 27 lock+decision value [79 222 166 227]
+Process 0 epoch 28 lock+decision value [251 43 117 71]
+Process 0 epoch 29 lock+decision value [194 109 69 231]
+Process 0 epoch 30 lock+decision value [214 130 131 155]
+Process 0 epoch 31 lock+decision value [34 195 176 141]
+Process 0 epoch 32 lock+decision value [227 189 106 220]
+Process 0 epoch 33 lock+decision value [231 132 29 18]
+Process 0 epoch 34 lock+decision value [54 203 236 24]
+Process 0 epoch 35 lock+decision value [162 48 248 210]
+Process 0 epoch 36 lock+decision value [182 236 157 103]
+Process 0 epoch 37 lock+decision value [238 207 242 67]
+Process 0 epoch 38 lock+decision value [18 170 161 227]
+Process 0 epoch 39 lock+decision value [167 234 54 111]
+Process 0 epoch 40 lock+decision value [86 221 208 58]
+Process 0 epoch 41 lock+decision value [31 160 89 25]
+Process 0 epoch 42 lock+decision value [151 78 134 157]
+Process 0 epoch 43 lock+decision value [13 55 53 159]
+Process 0 epoch 44 lock+decision value [133 114 31 27]
+Process 0 epoch 45 lock+decision value [14 223 68 183]
+Process 0 epoch 46 lock+decision value [237 237 252 169]
+Process 0 epoch 47 lock+decision value [155 16 139 75]
+Process 0 epoch 48 lock+decision value [242 189 246 248]
+Process 0 epoch 49 lock+decision value [98 101 197 146]
+Process 0 epoch 50 lock+decision value [152 20 143 238]
+Process 0 epoch 51 lock+decision value [199 174 251 224]
+Process 0 epoch 52 lock+decision value [80 32 153 107]
+Process 0 epoch 53 lock+decision value [99 191 183 61]
+Process 0 epoch 54 lock+decision value [146 251 145 232]
+Process 0 epoch 55 lock+decision value [244 71 19 135]
+Process 0 epoch 56 lock+decision value [58 24 62 75]
+Process 0 epoch 57 lock+decision value [113 17 240 167]
+Process 0 epoch 58 lock+decision value [52 203 229 74]
+Process 0 epoch 59 lock+decision value [31 187 32 18]
+Process 0 epoch 60 lock+decision value [247 75 88 170]
+Process 0 epoch 61 lock+decision value [124 63 32 121]
+Process 0 epoch 62 lock+decision value [117 51 162 27]
+Process 0 epoch 63 lock+decision value [153 62 151 168]
+Process 0 epoch 64 lock+decision value [213 14 170 208]
+Process 0 epoch 65 lock+decision value [197 21 76 31]
+Process 0 epoch 66 lock+decision value [21 54 89 83]
+Process 0 epoch 67 lock+decision value [239 169 187 231]
+Process 0 epoch 68 lock+decision value [247 180 123 88]
+Process 0 epoch 69 lock+decision value [149 39 88 98]
+Process 0 epoch 70 lock+decision value [155 2 142 107]
+Process 0 epoch 71 lock+decision value [29 238 232 159]
+Process 0 epoch 72 lock+decision value [195 183 250 119]
+Process 0 epoch 73 lock+decision value [217 109 106 66]
+Process 0 epoch 74 lock+decision value [120 167 56 228]
+Process 0 epoch 75 lock+decision value [114 31 199 189]
+Process 0 epoch 76 lock+decision value [227 102 186 45]
+Process 0 epoch 77 lock+decision value [31 247 11 205]
+Process 0 epoch 78 lock+decision value [173 22 172 59]
+Process 0 epoch 79 lock+decision value [58 130 49 50]
+Process 0 epoch 80 lock+decision value [20 253 75 12]
+Process 0 epoch 81 lock+decision value [172 159 208 53]
+Process 0 epoch 82 lock+decision value [12 18 107 86]
+Process 0 epoch 83 lock+decision value [78 111 125 86]
+Process 0 epoch 84 lock+decision value [124 119 99 111]
+Process 0 epoch 85 lock+decision value [175 224 36 54]
+Process 0 epoch 86 lock+decision value [254 11 157 161]
+Process 0 epoch 87 lock+decision value [108 39 71 202]
+Process 0 epoch 88 lock+decision value [190 151 174 9]
+Process 0 epoch 89 lock+decision value [240 153 245 162]
+Process 0 epoch 90 lock+decision value [80 254 118 191]
+Process 0 epoch 91 lock+decision value [253 57 171 193]
+Process 0 epoch 92 lock+decision value [122 2 34 111]
+Process 0 epoch 93 lock+decision value [92 233 101 32]
+Process 0 epoch 94 lock+decision value [188 237 60 170]
+Process 0 epoch 95 lock+decision value [108 118 68 74]
+Process 0 epoch 96 lock+decision value [73 7 127 33]
+Process 0 epoch 97 lock+decision value [222 11 251 121]
+Process 0 epoch 98 lock+decision value [192 115 71 15]
+Process 0 epoch 99 lock+decision value [12 9 191 74]
+02.040866 p0 Delivered value from last epoch 99
+02.041039 p0 Workload generator stopped after 2.025668552s and 2 empty values delivered
+02.041050 p0 Throughput: 98 values in 22.040873ms: 4446.284864 msg/s | 4552995.700306 bytes/s
+02.041055 p0 Latency: 98 values: 2.000619561s +- 642.151µs
+02.041058 p0 Power: 0.002276
+02.041063 p0 NoopRoutine started, expected duration: 2s
+03.018398 p0 Process [0 0 0 0 0 0 0 0] [0 0 100] [100 98]
+04.001316 p0 BcastQ: 302, 302, 0, 0
+04.001341 p0 DelivQ: 302, 302, 0, 0
+04.015950 p0 Process [0 0 0 0 0 0 0 0] [0 0 0] [0 0]
+04.041336 p0 Leaving NoopRoutine after 2.00026795s and 0 empty values 0 not empty
