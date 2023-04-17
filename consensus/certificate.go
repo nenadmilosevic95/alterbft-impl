@@ -22,12 +22,11 @@ type Certificate struct {
 	Type    int16   // Type of the certificate (BLOCK or SILENCE)
 	Epoch   int64   // Epoch in which the certificate was created.
 	blockID BlockID // BlockID of a block we have a block certificate of.
-
+	Height  int64
 	// This field is used only locally, it is not marshalled and it needs to be
 	// set explicitly when we update validCertificate or lockedCertificate.
 	// It is used when creating new block based on the validCertificate.
-	block  *Block
-	height int64
+	block *Block
 
 	// Signatures
 	Signatures map[int]Signature
@@ -42,12 +41,12 @@ type Certificate struct {
 
 // NewBlockCertificate creates a block certificate with no signers.
 // This method fills the fields that are common to the certified VOTE messages.
-func NewBlockCertificate(epoch int64, blockID BlockID) *Certificate {
+func NewBlockCertificate(epoch int64, blockID BlockID, height int64) *Certificate {
 	return &Certificate{
-		Type:    BLOCK_CERT,
-		Epoch:   epoch,
-		blockID: blockID,
-
+		Type:       BLOCK_CERT,
+		Epoch:      epoch,
+		blockID:    blockID,
+		Height:     height,
 		Signatures: make(map[int]Signature),
 	}
 }
@@ -128,7 +127,7 @@ func (c *Certificate) String() string {
 func (c *Certificate) ByteSize() int {
 	payloadSize := 10
 	if c.Type == BLOCK_CERT {
-		payloadSize += BlockIDSize
+		payloadSize += BlockIDSize + 8
 	}
 	numSignatures := len(c.Signatures)
 	return payloadSize + numSignatures*MessageSignatureSize
@@ -150,20 +149,20 @@ func (c *Certificate) MarshallTo(buffer []byte) (payloadSize int) {
 	buffer[0] = MessageCode
 	buffer[1] = byte(c.Type)                        // 2 bytes
 	encoding.PutUint64(buffer[2:], uint64(c.Epoch)) // 8 bytes
-	payloadSize = 10
+	index := 10
 	if c.Type == BLOCK_CERT {
-		c.BlockID().MarshallTo(buffer[payloadSize:]) // BlockIDSize
-		payloadSize += BlockIDSize
+		encoding.PutUint64(buffer[index:], uint64(c.Height))
+		index += 8
+		c.BlockID().MarshallTo(buffer[index:]) // BlockIDSize
+		index += BlockIDSize
 	}
 	// 2. Number of signatures * MessageSignatureSize bytes
-	numSignatures := len(c.Signatures)
-	index := payloadSize
 	for sender, signature := range c.Signatures {
 		encoding.PutUint16(buffer[index:], uint16(sender))
 		signature.MarshallTo(buffer[index+2:])
 		index += MessageSignatureSize
 	}
-	return payloadSize + numSignatures*MessageSignatureSize
+	return c.ByteSize()
 }
 
 // Payload returns the certificate payload, encoded into bytes.
@@ -172,7 +171,7 @@ func (c *Certificate) Payload() []byte {
 	c.Marshall()
 	payloadSize := 10
 	if c.Type == BLOCK_CERT {
-		payloadSize += BlockIDSize
+		payloadSize += BlockIDSize + 8
 	}
 	return c.marshalled[:payloadSize]
 }
@@ -187,6 +186,8 @@ func CertificateFromBytes(buffer []byte) *Certificate {
 	certificate.Epoch = int64(encoding.Uint64(buffer[2:])) // 8 bytes
 	payloadSize := 10
 	if certificate.Type == BLOCK_CERT {
+		certificate.Height = int64(encoding.Uint64(buffer[payloadSize:]))
+		payloadSize += 8
 		certificate.blockID = BlockIDFromBytes(buffer[payloadSize:]) // BlockIDSize
 		payloadSize += BlockIDSize
 	}
@@ -205,18 +206,12 @@ func (c *Certificate) ReconstructMessage(sender int) *Message {
 	var message *Message
 	if signature, ok := c.Signatures[sender]; ok {
 		if c.Type == BLOCK_CERT {
-			message = &Message{
-				Type:    VOTE,
-				BlockID: c.blockID,
-			}
+			message = NewVoteMessage(c.Epoch, c.BlockID(), c.Height, int16(sender))
+
 		}
 		if c.Type == SILENCE_CERT {
-			message = &Message{
-				Type: SILENCE,
-			}
+			message = NewSilenceMessage(c.Epoch, int16(sender))
 		}
-		message.Epoch = c.Epoch
-		message.Sender = sender
 		message.Signature = signature
 	}
 	return message
@@ -227,20 +222,17 @@ func (c *Certificate) ReconstructMessage(sender int) *Message {
 func (c *Certificate) ReconstructMessages() []*Message {
 	messages := make([]*Message, len(c.Signatures))
 	i := 0
+	var message *Message
 	for sender, signature := range c.Signatures {
 		if c.Type == BLOCK_CERT {
-			messages[i] = &Message{
-				Type:    VOTE,
-				BlockID: c.blockID,
-			}
-		} else {
-			messages[i] = &Message{
-				Type: SILENCE,
-			}
+			message = NewVoteMessage(c.Epoch, c.BlockID(), c.Height, int16(sender))
+
 		}
-		messages[i].Epoch = c.Epoch
-		messages[i].Sender = sender
-		messages[i].Signature = signature
+		if c.Type == SILENCE_CERT {
+			message = NewSilenceMessage(c.Epoch, int16(sender))
+		}
+		message.Signature = signature
+		messages[i] = message
 		i++
 	}
 	return messages

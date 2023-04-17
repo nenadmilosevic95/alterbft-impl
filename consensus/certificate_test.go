@@ -23,6 +23,9 @@ func assertCertificateEquals(t *testing.T, c, expected *Certificate) {
 	if c.Epoch != expected.Epoch {
 		t.Error("Expected certificate epoch \n", expected.Epoch, " got \n", c.Epoch)
 	}
+	if c.Height != expected.Height {
+		t.Error("Expected certificate height \n", expected.Height, " got \n", c.Height)
+	}
 	if !c.BlockID().Equal(expected.BlockID()) {
 		t.Error("Expected certificate blockID \n", expected.BlockID(), " got \n", c.BlockID())
 	}
@@ -34,11 +37,11 @@ func assertCertificateEquals(t *testing.T, c, expected *Certificate) {
 }
 
 func testBlockCertificate(e int64, block *Block, n int) *Certificate {
-	bc := NewBlockCertificate(e, block.BlockID())
+	bc := NewBlockCertificate(e, block.BlockID(), block.Height)
 	keys := testGetKeys(n)
 	votes := make([]*Message, n)
 	for i := 0; i < len(votes); i++ {
-		votes[i] = NewVoteMessage(e, block.BlockID(), int16(i))
+		votes[i] = NewVoteMessage(e, block.BlockID(), block.Height, int16(i))
 		votes[i].Sign(keys[i])
 		bc.AddSignature(votes[i].Signature, votes[i].Sender)
 	}
@@ -59,8 +62,8 @@ func testSilenceCertificate(e int64) *Certificate {
 
 func TestEmptyBlockCertificate(t *testing.T) {
 	e := int64(7)
-	id := NewBlock(testRandValue(1024), nil).BlockID()
-	c := NewBlockCertificate(e, id)
+	block := NewBlock(testRandValue(1024), nil)
+	c := NewBlockCertificate(e, block.BlockID(), block.Height)
 	if c == nil {
 		t.Fatal("Nil certificate")
 	}
@@ -70,8 +73,8 @@ func TestEmptyBlockCertificate(t *testing.T) {
 	if c.Epoch != e {
 		t.Error("Wrong certificate Epoch", c.Epoch, e)
 	}
-	if !c.blockID.Equal(id) {
-		t.Error("Wrong certificate blockID", c.blockID, id)
+	if !c.blockID.Equal(block.BlockID()) {
+		t.Error("Wrong certificate blockID", c.blockID, block.BlockID())
 	}
 	if len(c.Signatures) != 0 {
 		t.Error("Expected no Signatures, got", c.Signatures)
@@ -96,8 +99,8 @@ func TestEmptyBlockCertificate(t *testing.T) {
 	if c.Epoch != e {
 		t.Error("Wrong unmarshalled certificate Epoch", c.Epoch, e)
 	}
-	if !c.blockID.Equal(id) {
-		t.Error("Wrong unmarshalled certificate blockID", c.blockID, id)
+	if !c.blockID.Equal(block.BlockID()) {
+		t.Error("Wrong unmarshalled certificate blockID", c.blockID, block.BlockID())
 	}
 	if len(c.Signatures) != 0 {
 		t.Error("Expected no Signatures, got", c.Signatures)
@@ -203,10 +206,10 @@ func findMessageCertificate(t *testing.T, m *Message, c *Certificate, count int)
 func TestCertificateWithVotes(t *testing.T) {
 	e := int64(7)
 	// FIXME: where the height comes from?
-	id := NewBlock(testRandValue(1024), nil).BlockID()
-	c := NewBlockCertificate(e, id)
+	block := NewBlock(testRandValue(1024), nil)
+	c := NewBlockCertificate(e, block.BlockID(), block.Height)
 
-	v1 := NewVoteMessage(e, id, 0)
+	v1 := NewVoteMessage(e, block.BlockID(), block.Height, 0)
 	v1.Sign(crypto.GeneratePrivateKey())
 	c.AddSignature(v1.Signature, v1.Sender)
 	findMessageCertificate(t, v1, c, 1)
@@ -218,7 +221,7 @@ func TestCertificateWithVotes(t *testing.T) {
 	c = CertificateFromBytes(b)
 	findMessageCertificate(t, v1, c, 1)
 
-	v2 := NewVoteMessage(e, id, 3)
+	v2 := NewVoteMessage(e, block.BlockID(), block.Height, 3)
 	v2.Sign(crypto.GeneratePrivateKey())
 	c.AddSignature(v2.Signature, v2.Sender)
 	fmt.Print(c)
@@ -231,7 +234,7 @@ func TestCertificateWithVotes(t *testing.T) {
 	findMessageCertificate(t, v1, c, 2)
 	findMessageCertificate(t, v2, c, 2)
 
-	v3 := NewVoteMessage(e, id, 27)
+	v3 := NewVoteMessage(e, block.BlockID(), block.Height, 27)
 	v3.Sign(crypto.GeneratePrivateKey())
 	c.AddSignature(v3.Signature, v3.Sender)
 	findMessageCertificate(t, v1, c, 3)
@@ -293,8 +296,8 @@ func TestSignatureGetCryptoSignatures(t *testing.T) {
 	keys := []crypto.PrivateKey{crypto.GeneratePrivateKey(), crypto.GeneratePrivateKey()}
 	e := int64(3)
 	b := NewBlock(testRandValue(1024), nil)
-	votes := []*Message{NewVoteMessage(e, b.BlockID(), 0), NewVoteMessage(e, b.BlockID(), 1)}
-	bc := NewBlockCertificate(e, b.BlockID())
+	votes := []*Message{NewVoteMessage(e, b.BlockID(), b.Height, 0), NewVoteMessage(e, b.BlockID(), b.Height, 1)}
+	bc := NewBlockCertificate(e, b.BlockID(), b.Height)
 	for i, v := range votes {
 		v.Sign(keys[i])
 		if v.VerifySignature(keys[i].PubKey()) == false {

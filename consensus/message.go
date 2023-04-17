@@ -26,8 +26,9 @@ var encoding binary.ByteOrder = binary.LittleEndian
 
 // Message is a generic consensus message.
 type Message struct {
-	Type  int16
-	Epoch int64
+	Type   int16
+	Epoch  int64
+	Height int64
 
 	Block       *Block
 	BlockID     BlockID
@@ -68,11 +69,12 @@ func NewSilenceMessage(e int64, sender int16) *Message {
 	}
 }
 
-func NewVoteMessage(e int64, id BlockID, sender int16) *Message {
+func NewVoteMessage(e int64, id BlockID, height int64, sender int16) *Message {
 	return &Message{
 		Type:    VOTE,
 		Epoch:   e,
 		BlockID: id,
+		Height:  height,
 		Sender:  int(sender),
 	}
 }
@@ -90,9 +92,9 @@ func NewQuitEpochMessage(e int64, c *Certificate) *Message {
 func MessageFromBytes(buffer []byte) *Message {
 	mType := int16(buffer[1])
 	var epoch int64
+	var height int64
 	if mType != QUIT_EPOCH {
 		epoch = int64(encoding.Uint64(buffer[2:]))
-
 	}
 	index := 10
 	var block *Block = nil
@@ -120,6 +122,8 @@ func MessageFromBytes(buffer []byte) *Message {
 		copy(payload[:8], buffer[2:10])
 		block.BlockID().MarshallTo(payload[8:])
 	case VOTE:
+		epoch = int64(encoding.Uint64(buffer[index:]))
+		index += 8
 		blockID = BlockIDFromBytes(buffer[index:])
 		index += BlockIDSize
 		payload = buffer[:index]
@@ -149,6 +153,7 @@ func MessageFromBytes(buffer []byte) *Message {
 	return &Message{
 		Type:        mType,
 		Epoch:       epoch,
+		Height:      height,
 		Block:       block,
 		BlockID:     blockID,
 		Certificate: certificate,
@@ -181,7 +186,7 @@ func (m *Message) ByteSize() int {
 	case SILENCE:
 		return 12 + SignatureSize
 	case VOTE:
-		return 12 + BlockIDSize + 2*SignatureSize
+		return 20 + BlockIDSize + 2*SignatureSize
 	case QUIT_EPOCH:
 		return 2 + m.Certificate.ByteSize()
 	default:
@@ -244,6 +249,8 @@ func (m *Message) MarshallTo(buffer []byte) {
 		encoding.PutUint64(m.payload[0:], uint64(m.Epoch))
 		m.Block.BlockID().MarshallTo(m.payload[8:])
 	case VOTE:
+		encoding.PutUint64(buffer[index:], uint64(m.Height))
+		index += 8
 		n = m.BlockID.MarshallTo(buffer[index:])
 		index += n
 		m.payload = buffer[:index]

@@ -218,10 +218,9 @@ func (c *AlterBFT) processVote(vote *Message) {
 	// process already received Ce(Bk) for some block Bk in epoch e
 
 	if c.epochPhase != Commit {
-		blockID := vote.BlockID
-		blockCert := c.Votes.Get(c.Epoch, blockID)
+		blockCert := c.Votes.Get(c.Epoch, vote.BlockID)
 		if blockCert == nil {
-			blockCert = NewBlockCertificate(c.Epoch, blockID)
+			blockCert = NewBlockCertificate(c.Epoch, vote.BlockID, vote.Height)
 			c.Votes.Add(blockCert)
 		}
 		ok := blockCert.AddSignature(vote.Signature, vote.Sender)
@@ -375,7 +374,7 @@ func (c *AlterBFT) broadcastProposal() {
 	var height int64 = MIN_HEIGHT
 	if c.validCertificate != nil {
 		prevBlockID = c.validCertificate.blockID
-		height = c.validCertificate.height + 1
+		height = c.validCertificate.Height + 1
 	}
 	block := &Block{
 		Value:       value,
@@ -390,7 +389,7 @@ func (c *AlterBFT) broadcastProposal() {
 		Sender:      c.Process.ID(),
 		SenderFwd:   c.Process.ID(),
 	}
-	vote := NewVoteMessage(c.Epoch, block.BlockID(), int16(c.Process.ID()))
+	vote := NewVoteMessage(c.Epoch, block.BlockID(), block.Height, int16(c.Process.ID()))
 	c.Process.Broadcast(proposal)
 	c.Process.Broadcast(vote)
 }

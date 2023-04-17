@@ -18,6 +18,9 @@ func assertMessageEquals(t *testing.T, m, expected *Message) {
 	if m.Epoch != expected.Epoch {
 		t.Error("Expected message epoch \n", expected.Epoch, " got \n", m.Epoch)
 	}
+	if m.Height != expected.Height {
+		t.Error("Expected message height \n", expected.Height, " got \n", m.Height)
+	}
 	if !m.Block.Equal(expected.Block) {
 		t.Error("Expected message block \n", expected.Block, " got \n", m.Block)
 	}
@@ -76,7 +79,7 @@ func TestMessageMarshalling(t *testing.T) {
 	m.Sign(keys[0])
 	testMarshalling(m, t)
 	// Test 3: Vote
-	m = NewVoteMessage(MIN_EPOCH, b0.BlockID(), 5)
+	m = NewVoteMessage(MIN_EPOCH, b0.BlockID(), b0.Height, 5)
 	m.Sign(keys[0])
 	testMarshalling(m, t)
 	// Test 4: Quit epoch

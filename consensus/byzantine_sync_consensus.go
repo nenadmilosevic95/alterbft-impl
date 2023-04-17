@@ -1,5 +1,6 @@
 package consensus
 
+/*
 import (
 	"fmt"
 	"math/rand"
@@ -569,3 +570,4 @@ func (c *ByzantineSyncConsensus) scheduleTimeout(timeoutType int16) {
 		c.scheduledTimeouts[timeoutType] = true
 	}
 }
+*/

@@ -43,7 +43,8 @@ func (p *Process) CreateNewEpoch(epoch int64) consensus.Consensus {
 	switch p.config.Model {
 	case "sync":
 		if p.config.Byzantines[p.ID()] {
-			return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
+			//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
+			return consensus.NewAlterBFT(epoch, p)
 		} else {
 			return consensus.NewAlterBFT(epoch, p)
 		}

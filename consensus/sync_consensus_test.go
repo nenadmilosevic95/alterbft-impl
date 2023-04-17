@@ -6,10 +6,10 @@ import (
 	"dslab.inf.usi.ch/tendermint/crypto"
 )
 
-func getNVotes(e int64, blockID BlockID, n int) []*Message {
+func getNVotes(e int64, block *Block, n int) []*Message {
 	votes := make([]*Message, n)
 	for i := 0; i < n; i++ {
-		votes[i] = NewVoteMessage(e, blockID, int16(i))
+		votes[i] = NewVoteMessage(e, block.BlockID(), block.Height, int16(i))
 		votes[i].Sign(crypto.GeneratePrivateKey())
 	}
 	return votes
@@ -41,7 +41,7 @@ func TestStart(t *testing.T) {
 	p = NewTestProcess(0, 3)
 	c = NewAlterBFT(e, p)
 	b0 := NewBlock(testRandValue(1024), nil)
-	blockCert := NewBlockCertificate(e-1, b0.BlockID())
+	blockCert := NewBlockCertificate(e-1, b0.BlockID(), b0.Height)
 	blockCert.block = b0
 	c.Start(blockCert, blockCert)
 	if len(p.state.sendQueue) != 2 ||
@@ -72,7 +72,7 @@ func TestValidProposal(t *testing.T) {
 	proposal := NewProposeMessage(e, b0, nil, 0)
 	proposal.Marshall()
 	c.processProposal(proposal)
-	vv := NewVoteMessage(e, b0.BlockID(), 0)
+	vv := NewVoteMessage(e, b0.BlockID(), b0.Height, 0)
 	vv.Marshall()
 	c.ProcessMessage(vv)
 	if !c.Proposals.Has(proposal.Block.BlockID()) ||
@@ -82,7 +82,7 @@ func TestValidProposal(t *testing.T) {
 	}
 	assertMessageEquals(t, p.state.sendQueue[0], proposal)
 	assertMessageEquals(t, p.state.sendQueue[1], vv)
-	v := NewVoteMessage(e, b0.BlockID(), int16(c.Process.ID()))
+	v := NewVoteMessage(e, b0.BlockID(), b0.Height, int16(c.Process.ID()))
 	assertMessageEquals(t, p.state.sendQueue[2], v)
 
 }
@@ -97,7 +97,7 @@ func TestValidProposalAfterQuorumOfVotes(t *testing.T) {
 	proposal := NewProposeMessage(e, b0, nil, 0)
 	proposal.Marshall()
 	c.Start(nil, nil)
-	votes := getNVotes(e, proposal.Block.BlockID(), 2)
+	votes := getNVotes(e, proposal.Block, 2)
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}
@@ -106,7 +106,7 @@ func TestValidProposalAfterQuorumOfVotes(t *testing.T) {
 		c.epochPhase != Locked {
 		t.Error("Process did not react on Ce(Bk)")
 	}
-	blockCert := NewBlockCertificate(e, proposal.Block.BlockID())
+	blockCert := NewBlockCertificate(e, proposal.Block.BlockID(), proposal.Block.Height)
 	for _, v := range votes {
 		blockCert.AddSignature(v.Signature, v.Sender)
 	}
@@ -147,15 +147,15 @@ func TestInValidProposal(t *testing.T) {
 	c = NewAlterBFT(e, p)
 
 	// Create a block cert
-	b0Cert := NewBlockCertificate(e-1, b0.BlockID())
-	votes := getNVotes(e-1, b0.BlockID(), 2)
+	b0Cert := NewBlockCertificate(e-1, b0.BlockID(), b0.Height)
+	votes := getNVotes(e-1, b0, 2)
 	for _, v := range votes {
 		b0Cert.AddSignature(v.Signature, v.Sender)
 	}
 	c.Start(b0Cert, b0Cert)
 	// create same cert but with smaller epoch
-	b0CertLower := NewBlockCertificate(e-2, b0.BlockID())
-	votes = getNVotes(e-2, b0.BlockID(), 2)
+	b0CertLower := NewBlockCertificate(e-2, b0.BlockID(), b0.Height)
+	votes = getNVotes(e-2, b0, 2)
 	for _, v := range votes {
 		b0CertLower.AddSignature(v.Signature, v.Sender)
 	}
@@ -181,7 +181,7 @@ func TestProcessVoteMessage(t *testing.T) {
 	c := NewAlterBFT(e, p)
 	c.Start(nil, nil)
 	b0 := NewBlock(testRandValue(1024), nil)
-	votes := getNVotes(e, b0.BlockID(), 2)
+	votes := getNVotes(e, b0, 2)
 	for _, v := range votes {
 		c.ProcessMessage(v)
 	}
@@ -200,7 +200,7 @@ func TestProcessVoteMessage(t *testing.T) {
 	proposal := NewProposeMessage(e, b0, nil, 0)
 	proposal.Marshall()
 	c.ProcessMessage(proposal)
-	votes = getNVotes(e, b0.BlockID(), 2)
+	votes = getNVotes(e, b0, 2)
 	for _, v := range votes {
 		c.ProcessMessage(v)
 	}
@@ -215,7 +215,7 @@ func TestProcessVoteMessage(t *testing.T) {
 		t.Errorf("Process didn't process well majority of votes with proposal! %v and %v", len(p.state.sendQueue), len(p.state.timeoutQueue))
 	}
 	// Majority + 1 vote
-	votes = getNVotes(e, b0.BlockID(), 1)
+	votes = getNVotes(e, b0, 1)
 	c.ProcessMessage(votes[0])
 	// Nothing should change
 	if len(p.state.sendQueue) != 4 ||
@@ -330,8 +330,8 @@ func TestQuitEpochMessageWitBlockCertificate(t *testing.T) {
 	c.Start(nil, nil)
 	proposal = NewProposeMessage(e, b, nil, 0)
 	proposal1 := NewProposeMessage(e, b1, nil, 0)
-	vote := NewVoteMessage(e, proposal.Block.BlockID(), 0)
-	vote1 := NewVoteMessage(e, proposal1.Block.BlockID(), 0)
+	vote := NewVoteMessage(e, proposal.Block.BlockID(), proposal.Block.Height, 0)
+	vote1 := NewVoteMessage(e, proposal1.Block.BlockID(), proposal1.Block.Height, 0)
 	c.ProcessMessage(vote)
 	c.ProcessMessage(vote1)
 	c.ProcessMessage(quitEpoch)
@@ -350,7 +350,7 @@ func TestQuitEpochMessageWitBlockCertificate(t *testing.T) {
 	proposal = NewProposeMessage(e, b, nil, 0)
 	proposal.Marshall()
 	c.processProposal(proposal)
-	votes := getNVotes(e, proposal.Block.BlockID(), 2)
+	votes := getNVotes(e, proposal.Block, 2)
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}
@@ -412,7 +412,7 @@ func TestQuitEpochMessageWitSilenceCertificate(t *testing.T) {
 	proposal = NewProposeMessage(e, b, nil, 0)
 	proposal.Marshall()
 	c.processProposal(proposal)
-	votes := getNVotes(e, proposal.Block.BlockID(), 2)
+	votes := getNVotes(e, proposal.Block, 2)
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}
@@ -450,7 +450,7 @@ func TestDecisionBlock(t *testing.T) {
 	b0 := NewBlock(testRandValue(1024), nil)
 	proposal := NewProposeMessage(e, b0, nil, 0)
 	// Get n votes
-	votes := getNVotes(e, proposal.Block.BlockID(), 2)
+	votes := getNVotes(e, proposal.Block, 2)
 	// Process proposal and n votes for it
 	proposal.Marshall()
 	c.ProcessMessage(proposal)
@@ -490,7 +490,7 @@ func TestDecisionBlock(t *testing.T) {
 	b0 = NewBlock(testRandValue(1024), nil)
 	proposal = NewProposeMessage(e, b0, nil, 0)
 	// Get n votes
-	votes = getNVotes(e, proposal.Block.BlockID(), 2)
+	votes = getNVotes(e, proposal.Block, 2)
 	// Process proposal and n votes for it
 	proposal.Marshall()
 	if len(p.state.sendQueue) != 0 {
@@ -578,7 +578,7 @@ func TestNoDecisionEquivocation(t *testing.T) {
 	b0 := NewBlock(testRandValue(1024), nil)
 	b1 := NewBlock(testRandValue(1024), nil)
 	proposals := []*Message{NewProposeMessage(e, b0, nil, 0), NewProposeMessage(e, b1, nil, 0)}
-	votes := []*Message{NewVoteMessage(e, b0.BlockID(), int16(0)), NewVoteMessage(e, b1.BlockID(), int16(0))}
+	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, int16(0)), NewVoteMessage(e, b1.BlockID(), b1.Height, int16(0))}
 	for _, m := range proposals {
 		m.Marshall()
 		c.ProcessMessage(m)
@@ -626,7 +626,7 @@ func TestNoDecisionBlockPlusSilence(t *testing.T) {
 	b0 := NewBlock(testRandValue(1024), nil)
 	proposal := NewProposeMessage(e, b0, nil, 0)
 	// Get n votes
-	votes := getNVotes(e, proposal.Block.BlockID(), 2)
+	votes := getNVotes(e, proposal.Block, 2)
 	// Process proposal and n votes for it
 	proposal.Marshall()
 	c.ProcessMessage(proposal)
@@ -683,7 +683,7 @@ func TestNoDecisionBlockPlusEquivocation(t *testing.T) {
 	b0 := NewBlock(testRandValue(1024), nil)
 	proposal := NewProposeMessage(e, b0, nil, 0)
 	// Get n votes
-	votes := getNVotes(e, proposal.Block.BlockID(), 2)
+	votes := getNVotes(e, proposal.Block, 2)
 	// Process proposal and n votes for it
 	proposal.Marshall()
 	c.ProcessMessage(proposal)
@@ -705,7 +705,7 @@ func TestNoDecisionBlockPlusEquivocation(t *testing.T) {
 
 	//Before timeoutEquivocation expires it receives another proposal
 	b1 := NewBlock(testRandValue(1024), nil)
-	secondVote := NewVoteMessage(e, b1.BlockID(), 0)
+	secondVote := NewVoteMessage(e, b1.BlockID(), b1.Height, 0)
 	c.ProcessMessage(secondVote)
 	//This should not trigger any timeout nor produce any more messages
 	if c.epochPhase != Finished || len(p.state.sendQueue) != 4 || len(p.state.timeoutQueue) != 2 {
@@ -758,7 +758,7 @@ func TestNoDecisionSilencePlusBlock(t *testing.T) {
 	if len(p.state.sendQueue) != 2 {
 		t.Error("Process forward a proposal and maybe it sent a vote!")
 	}
-	votes := getNVotes(e, proposal.Block.BlockID(), 2)
+	votes := getNVotes(e, proposal.Block, 2)
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}
@@ -818,7 +818,7 @@ func TestNoDecisionSilencePlusEquivocation(t *testing.T) {
 	b0 := NewBlock(testRandValue(1024), nil)
 	b1 := NewBlock(testRandValue(1024), nil)
 	proposals := []*Message{NewProposeMessage(e, b0, nil, 0), NewProposeMessage(e, b1, nil, 0)}
-	votes := []*Message{NewVoteMessage(e, b0.BlockID(), 0), NewVoteMessage(e, b1.BlockID(), 0)}
+	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, 0), NewVoteMessage(e, b1.BlockID(), b1.Height, 0)}
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}
@@ -853,7 +853,7 @@ func TestNoDecisionEquivocationPlusSilence(t *testing.T) {
 	b0 := NewBlock(testRandValue(1024), nil)
 	b1 := NewBlock(testRandValue(1024), nil)
 	proposals := []*Message{NewProposeMessage(e, b0, nil, 0), NewProposeMessage(e, b1, nil, 0)}
-	votes := []*Message{NewVoteMessage(e, b0.BlockID(), 0), NewVoteMessage(e, b1.BlockID(), 0)}
+	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, 0), NewVoteMessage(e, b1.BlockID(), b1.Height, 0)}
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}
@@ -900,7 +900,7 @@ func TestNoDecisionEquvocationPlusBlock(t *testing.T) {
 	b0 := NewBlock(testRandValue(1024), nil)
 	b1 := NewBlock(testRandValue(1024), nil)
 	proposals := []*Message{NewProposeMessage(e, b0, nil, 0), NewProposeMessage(e, b1, nil, 0)}
-	votes := []*Message{NewVoteMessage(e, b0.BlockID(), 0), NewVoteMessage(e, b1.BlockID(), 0)}
+	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, 0), NewVoteMessage(e, b1.BlockID(), b1.Height, 0)}
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}
@@ -913,7 +913,7 @@ func TestNoDecisionEquvocationPlusBlock(t *testing.T) {
 	}
 
 	// Before timeoutEpochChange expires process receives block certificate
-	votes = getNVotes(e, proposals[0].Block.BlockID(), 2)
+	votes = getNVotes(e, proposals[0].Block, 2)
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}
@@ -928,7 +928,7 @@ func TestNoDecisionEquvocationPlusBlock(t *testing.T) {
 	if c.epochPhase != Finished {
 		t.Error("Process didn't finish epoch!")
 	}
-	votes = getNVotes(e, proposals[1].Block.BlockID(), 2)
+	votes = getNVotes(e, proposals[1].Block, 2)
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}

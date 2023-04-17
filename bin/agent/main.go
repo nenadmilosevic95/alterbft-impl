@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"dslab.inf.usi.ch/tendermint"
-	"dslab.inf.usi.ch/tendermint/consensus"
 	"dslab.inf.usi.ch/tendermint/net"
 	"dslab.inf.usi.ch/tendermint/net/gossip"
 	"dslab.inf.usi.ch/tendermint/net/libp2p"
@@ -231,13 +230,14 @@ func main() {
 	if randomSeed == 0 {
 		randomSeed = eid
 	}
-	if numByzantines > 0 {
-		byzantines := consensus.GenerateByzantines(numByzantines, n, randomSeed)
-		if byzantines[pid] {
-			config.Byzantines = byzantines
-			log.Println("Byzantine process")
-		}
-	}
+	/*
+		if numByzantines > 0 {
+			byzantines := consensus.GenerateByzantines(numByzantines, n, randomSeed)
+			if byzantines[pid] {
+				config.Byzantines = byzantines
+				log.Println("Byzantine process")
+			}
+		}*/
 	config.ByzTime = byzTime
 	config.ByzAttack = byzAttack
 	process = tendermint.NewProcess(pid, n, config, gtransport, workload)

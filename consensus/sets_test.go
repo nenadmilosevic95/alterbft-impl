@@ -5,7 +5,7 @@ import "testing"
 func TestProposalSet(t *testing.T) {
 	ps := NewProposalSet()
 	b0 := NewBlock(testRandValue(1024), nil)
-	bCert := NewBlockCertificate(MIN_EPOCH, b0.BlockID())
+	bCert := NewBlockCertificate(MIN_EPOCH, b0.BlockID(), b0.Height)
 	b1a := NewBlock(testRandValue(1024), b0)
 	b1b := NewBlock(testRandValue(1024), b0)
 	b1c := NewBlock(testRandValue(1024), b0)
@@ -30,7 +30,7 @@ func TestCertificateSet(t *testing.T) {
 	if bc0 != nil {
 		t.Errorf("Get should return nil not %v", bc0)
 	}
-	bc0 = NewBlockCertificate(MIN_EPOCH, b0.BlockID())
+	bc0 = NewBlockCertificate(MIN_EPOCH, b0.BlockID(), b0.Height)
 	cs.Add(bc0)
 	if bc0 != cs.Get(bc0.Epoch, bc0.BlockID()) {
 		t.Errorf("Get is not returning good certificate")
