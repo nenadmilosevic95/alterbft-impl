@@ -26,13 +26,13 @@ func TestProposalSet(t *testing.T) {
 func TestCertificateSet(t *testing.T) {
 	cs := NewCertificateSet()
 	b0 := NewBlock(testRandValue(1024), nil)
-	bc0 := cs.Get(MIN_EPOCH, b0.BlockID())
+	bc0 := cs.Get(MIN_EPOCH, b0.BlockID(), b0.Height)
 	if bc0 != nil {
 		t.Errorf("Get should return nil not %v", bc0)
 	}
 	bc0 = NewBlockCertificate(MIN_EPOCH, b0.BlockID(), b0.Height)
 	cs.Add(bc0)
-	if bc0 != cs.Get(bc0.Epoch, bc0.BlockID()) {
+	if bc0 != cs.Get(bc0.Epoch, bc0.BlockID(), bc0.Height) {
 		t.Errorf("Get is not returning good certificate")
 	}
 }

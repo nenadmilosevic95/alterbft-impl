@@ -167,7 +167,7 @@ func (c *AlterBFT) tryToVote() {
 	}
 
 	proposal := c.Proposals.proposals[0]
-	proposerVote := c.Votes.GetVote(c.Epoch, proposal.Block.BlockID(), c.Process.Proposer(c.Epoch))
+	proposerVote := c.Votes.GetVote(c.Epoch, proposal.Block.BlockID(), proposal.Block.Height, c.Process.Proposer(c.Epoch))
 	shouldVote := proposerVote != nil &&
 		proposal.Certificate.RanksHigherOrEqual(c.lockedCertificate) &&
 		c.Process.ExtendValidChain(proposal.Block)
@@ -218,7 +218,7 @@ func (c *AlterBFT) processVote(vote *Message) {
 	// process already received Ce(Bk) for some block Bk in epoch e
 
 	if c.epochPhase != Commit {
-		blockCert := c.Votes.Get(c.Epoch, vote.BlockID)
+		blockCert := c.Votes.Get(c.Epoch, vote.BlockID, vote.Height)
 		if blockCert == nil {
 			blockCert = NewBlockCertificate(c.Epoch, vote.BlockID, vote.Height)
 			c.Votes.Add(blockCert)

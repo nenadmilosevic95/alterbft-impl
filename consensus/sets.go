@@ -53,18 +53,18 @@ func NewCertificateSet() *CertificateSet {
 }
 
 // Get returns certificate for blockID with no epoch and height set.
-func (cs *CertificateSet) Get(epoch int64, blockID BlockID) *Certificate {
+func (cs *CertificateSet) Get(epoch int64, blockID BlockID, height int64) *Certificate {
 	for _, c := range cs.certificates {
-		if c.BlockID().Equal(blockID) {
+		if c.BlockID().Equal(blockID) && c.Height == height {
 			return c
 		}
 	}
 	return nil
 }
 
-func (cs *CertificateSet) GetVote(epoch int64, blockID BlockID, sender int) *Message {
+func (cs *CertificateSet) GetVote(epoch int64, blockID BlockID, height int64, sender int) *Message {
 	for _, c := range cs.certificates {
-		if c.BlockID().Equal(blockID) {
+		if c.BlockID().Equal(blockID) && c.Height == height {
 			return c.ReconstructMessage(sender)
 		}
 	}
