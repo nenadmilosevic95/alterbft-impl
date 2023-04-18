@@ -216,11 +216,7 @@ func (c *AlterBFT) checkEquivocation() {
 func (c *AlterBFT) processVote(vote *Message) {
 	// we don't process votes in locked phase because we know that
 	// process already received Ce(Bk) for some block Bk in epoch e
-	if c.epochPhase < Commit && vote.Sender == c.Process.Proposer(c.Epoch) {
-		c.checkEquivocation()
-		c.tryToVote()
-	}
-	if c.epochPhase == Ready || c.epochPhase == EpochChange {
+	if c.epochPhase != Commit {
 		blockCert := c.Votes.Get(c.Epoch, vote.BlockID, vote.Height)
 		if blockCert == nil {
 			blockCert = NewBlockCertificate(c.Epoch, vote.BlockID, vote.Height)
@@ -230,15 +226,23 @@ func (c *AlterBFT) processVote(vote *Message) {
 		if !ok {
 			return
 		}
+		// Check equivocation!
+		if vote.Sender == c.Process.Proposer(c.Epoch) {
+			c.checkEquivocation()
+		}
 		if blockCert.SignatureCount() > c.Process.NumProcesses()/2 {
 			c.processBlockCertificate(blockCert)
+		} else {
+			if vote.Sender == c.Process.Proposer(c.Epoch) {
+				c.tryToVote()
+			}
 		}
 	}
 }
 
 // processBlockCertificate is called when cert has quorum of signatures and proposal.
 func (c *AlterBFT) processBlockCertificate(cert *Certificate) {
-	if c.epochPhase == Locked {
+	if c.epochPhase == Locked || c.epochPhase == Commit {
 		return
 	}
 	c.validCertificate = cert
