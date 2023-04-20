@@ -167,15 +167,16 @@ func (c *AlterBFT) tryToVote() {
 	}
 
 	proposal := c.Proposals.proposals[0]
-	proposerVote := c.Votes.GetVote(c.Epoch, proposal.Block.BlockID(), proposal.Block.Height, c.Process.Proposer(c.Epoch))
-	shouldVote := proposerVote != nil &&
-		proposal.Certificate.RanksHigherOrEqual(c.lockedCertificate) &&
+	shouldVote := proposal.Certificate.RanksHigherOrEqual(c.lockedCertificate) &&
 		c.Process.ExtendValidChain(proposal.Block)
 
 	if shouldVote {
 		if c.Process.Proposer(c.Epoch) != c.Process.ID() {
 			proposal.setFwdSender(c.Process.ID())
 			c.Process.Forward(proposal)
+			proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender))
+			proposerVote.Signature = proposal.Signature
+			c.processVote(proposerVote)
 			c.Process.Forward(proposerVote)
 		}
 		c.broadcastVote(VOTE, proposal.Block)
@@ -232,10 +233,6 @@ func (c *AlterBFT) processVote(vote *Message) {
 		}
 		if blockCert.SignatureCount() > c.Process.NumProcesses()/2 {
 			c.processBlockCertificate(blockCert)
-		} else {
-			if vote.Sender == c.Process.Proposer(c.Epoch) {
-				c.tryToVote()
-			}
 		}
 	}
 }
@@ -388,9 +385,7 @@ func (c *AlterBFT) broadcastProposal() {
 		Sender:      c.Process.ID(),
 		SenderFwd:   c.Process.ID(),
 	}
-	vote := NewVoteMessage(c.Epoch, block.BlockID(), block.Height, int16(c.Process.ID()))
 	c.Process.Broadcast(proposal)
-	c.Process.Broadcast(vote)
 }
 
 func (c *AlterBFT) broadcastVote(voteType int16, block *Block) {

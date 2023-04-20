@@ -29,11 +29,10 @@ func TestStart(t *testing.T) {
 	p := NewTestProcess(0, 3)
 	c := NewAlterBFT(e, p)
 	c.Start(nil, nil)
-	if len(p.state.sendQueue) != 2 ||
+	if len(p.state.sendQueue) != 1 ||
 		p.state.sendQueue[0].Type != PROPOSE ||
 		p.state.sendQueue[0].Block.Height != MIN_HEIGHT ||
 		p.state.sendQueue[0].Block.PrevBlockID != nil ||
-		p.state.sendQueue[1].Type != VOTE ||
 		len(p.state.timeoutQueue) != 0 {
 		t.Error("Process coordinator doesn't work!")
 	}
@@ -44,11 +43,10 @@ func TestStart(t *testing.T) {
 	blockCert := NewBlockCertificate(e-1, b0.BlockID(), b0.Height)
 	blockCert.block = b0
 	c.Start(blockCert, blockCert)
-	if len(p.state.sendQueue) != 2 ||
+	if len(p.state.sendQueue) != 1 ||
 		p.state.sendQueue[0].Type != PROPOSE ||
 		p.state.sendQueue[0].Block.Height != MIN_HEIGHT+1 ||
 		!p.state.sendQueue[0].Block.PrevBlockID.Equal(b0.BlockID()) ||
-		p.state.sendQueue[1].Type != VOTE ||
 		len(p.state.timeoutQueue) != 0 {
 		t.Error("Process coordinator doesn't work!")
 	}
@@ -454,8 +452,8 @@ func TestDecisionBlock(t *testing.T) {
 	// Process proposal and n votes for it
 	proposal.Marshall()
 	c.ProcessMessage(proposal)
-	if len(p.state.sendQueue) != 0 {
-		t.Error("Process voted before proposer's vote!")
+	if len(p.state.sendQueue) != 3 {
+		t.Error("Process did not vote!")
 	}
 	for _, m := range votes {
 		c.ProcessMessage(m)
@@ -584,7 +582,7 @@ func TestNoDecisionEquivocation(t *testing.T) {
 		c.ProcessMessage(m)
 	}
 	if c.epochPhase != Ready ||
-		len(p.state.sendQueue) != 0 {
+		len(p.state.sendQueue) != 3 {
 		t.Error("Process detected equivocationion without votes!")
 	}
 	if len(p.state.timeoutQueue) != 1 || p.state.timeoutQueue[0].Type != TimeoutPropose {
@@ -630,8 +628,8 @@ func TestNoDecisionBlockPlusSilence(t *testing.T) {
 	// Process proposal and n votes for it
 	proposal.Marshall()
 	c.ProcessMessage(proposal)
-	if len(p.state.sendQueue) != 0 {
-		t.Error("Process voted without vote!")
+	if len(p.state.sendQueue) != 3 {
+		t.Error("Process did not vote without vote!")
 	}
 	for _, m := range votes {
 		c.ProcessMessage(m)

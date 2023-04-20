@@ -107,6 +107,7 @@ func MessageFromBytes(buffer []byte) *Message {
 		n := int32(encoding.Uint32(buffer[index:]))
 		index += 4
 		end := index + int(n)
+		blockHeightIndex := index
 		block = BlockFromBytes(buffer[index:end])
 		index = end
 		if buffer[index] == 1 {
@@ -118,9 +119,10 @@ func MessageFromBytes(buffer []byte) *Message {
 			index += 1
 		}
 		// payload is epoch+blockID
-		payload = make([]byte, 8+BlockIDSize)
+		payload = make([]byte, 16+BlockIDSize)
 		copy(payload[:8], buffer[2:10])
-		block.BlockID().MarshallTo(payload[8:])
+		copy(payload[8:16], buffer[blockHeightIndex:blockHeightIndex+8])
+		block.BlockID().MarshallTo(payload[16:])
 	case VOTE:
 		height = int64(encoding.Uint64(buffer[index:]))
 		index += 8
@@ -245,9 +247,10 @@ func (m *Message) MarshallTo(buffer []byte) {
 			index += 1
 		}
 		// payload is epoch+blockID
-		m.payload = make([]byte, 8+BlockIDSize)
+		m.payload = make([]byte, 16+BlockIDSize)
 		encoding.PutUint64(m.payload[0:], uint64(m.Epoch))
-		m.Block.BlockID().MarshallTo(m.payload[8:])
+		encoding.PutUint64(m.payload[8:], uint64(m.Block.Height))
+		m.Block.BlockID().MarshallTo(m.payload[16:])
 	case VOTE:
 		encoding.PutUint64(buffer[index:], uint64(m.Height))
 		index += 8
