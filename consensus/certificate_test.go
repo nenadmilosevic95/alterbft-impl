@@ -8,32 +8,32 @@ import (
 	"dslab.inf.usi.ch/tendermint/crypto"
 )
 
-func assertCertificateEquals(t *testing.T, c, expected *Certificate) {
-	t.Helper()
+func assertCertificateEquals(c, expected *Certificate) error {
+
 	if c == nil && expected == nil {
-		return
+		return nil
 	}
 	if c == nil && expected != nil || c != nil && expected == nil {
-		t.Error("Unexpected nil message")
-		return
+		return fmt.Errorf("Unexpected nil message")
 	}
 	if c.Type != expected.Type {
-		t.Error("Expected certificate type \n", expected.Type, " got \n", c.Type)
+		return fmt.Errorf("Expected certificate type %v got %v\n", expected.Type, c.Type)
 	}
 	if c.Epoch != expected.Epoch {
-		t.Error("Expected certificate epoch \n", expected.Epoch, " got \n", c.Epoch)
+		return fmt.Errorf("Expected certificate epoch %v got %v \n", expected.Epoch, c.Epoch)
 	}
 	if c.Height != expected.Height {
-		t.Error("Expected certificate height \n", expected.Height, " got \n", c.Height)
+		return fmt.Errorf("Expected certificate height %v got %v\n", expected.Height, c.Height)
 	}
 	if !c.BlockID().Equal(expected.BlockID()) {
-		t.Error("Expected certificate blockID \n", expected.BlockID(), " got \n", c.BlockID())
+		return fmt.Errorf("Expected certificate blockID %v got %v\n", expected.BlockID(), c.BlockID())
 	}
 	for i := 0; i < len(c.Signatures); i++ {
 		if !c.Signatures[i].Equal(expected.Signatures[i]) {
-			t.Errorf("Expected signature %v for sender %v\n, got %v.\n", expected.Signatures[i], i, c.Signatures[i])
+			return fmt.Errorf("Expected signature %v for sender %v\n, got %v.\n", expected.Signatures[i], i, c.Signatures[i])
 		}
 	}
+	return nil
 }
 
 func testBlockCertificate(e int64, block *Block, n int) *Certificate {
@@ -197,7 +197,10 @@ func findMessageCertificate(t *testing.T, m *Message, c *Certificate, count int)
 		t.Error("Couldn't find reconstructed message with sender",
 			m.Sender, messages)
 	} else {
-		assertMessageEquals(t, messages[index], m)
+		err := assertMessageEquals(messages[index], m)
+		if err != nil {
+			t.Error(err)
+		}
 		//		m := NewMessageFromBytes(payloads[index])
 		//		assertMessageEquals(t, m, v)
 	}
@@ -319,7 +322,10 @@ func TestSignatureGetCryptoSignatures(t *testing.T) {
 	quitEpoch := NewQuitEpochMessage(e, bc)
 	marshalled := quitEpoch.Marshall()
 	bcc := MessageFromBytes(marshalled).Certificate
-	assertCertificateEquals(t, bc, bcc)
+	err := assertCertificateEquals(bc, bcc)
+	if err != nil {
+		t.Error(err)
+	}
 
 	for _, sig := range bcc.GetCryptoSignatures() {
 		if sig.ID != votes[sig.ID].Sender {

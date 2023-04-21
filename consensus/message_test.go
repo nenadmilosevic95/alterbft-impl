@@ -1,39 +1,42 @@
 package consensus
 
 import (
+	"fmt"
 	"testing"
 
 	"dslab.inf.usi.ch/tendermint/crypto"
 )
 
-func assertMessageEquals(t *testing.T, m, expected *Message) {
-	t.Helper()
+func assertMessageEquals(m, expected *Message) error {
 	if m == nil {
-		t.Error("Unexpected nil message")
-		return
+		return fmt.Errorf("Unexpected nil message")
 	}
 	if m.Type != expected.Type {
-		t.Error("Expected message type \n", expected.Type, " got \n", m.Type)
+		return fmt.Errorf("Expected message type %v got %v\n", expected.Type, m.Type)
 	}
 	if m.Epoch != expected.Epoch {
-		t.Error("Expected message epoch \n", expected.Epoch, " got \n", m.Epoch)
+		return fmt.Errorf("Expected message epoch %v got %v\n", expected.Epoch, m.Epoch)
 	}
 	if m.Height != expected.Height {
-		t.Error("Expected message height \n", expected.Height, " got \n", m.Height)
+		return fmt.Errorf("Expected message height %v got %v\n", expected.Height, m.Height)
 	}
 	if !m.Block.Equal(expected.Block) {
-		t.Error("Expected message block \n", expected.Block, " got \n", m.Block)
+		return fmt.Errorf("Expected message block %v got %v\n", expected.Block, m.Block)
 	}
 	if !m.BlockID.Equal(expected.BlockID) {
-		t.Error("Expected message blockID \n", expected.BlockID, " got \n", m.BlockID)
+		return fmt.Errorf("Expected message blockID %v got %v\n", expected.BlockID, m.BlockID)
 	}
-	assertCertificateEquals(t, m.Certificate, expected.Certificate)
+	err := assertCertificateEquals(m.Certificate, expected.Certificate)
+	if err != nil {
+		return err
+	}
 	if m.Sender != expected.Sender {
-		t.Error("Expected message sender \n", expected.Sender, " got \n", m.Sender)
+		return fmt.Errorf("Expected message sender %v got %v\n", expected.Sender, m.Sender)
 	}
 	if !m.Signature.Equal(expected.Signature) {
-		t.Error("Expected message signature \n", expected.Signature, "got\n", m.Signature)
+		return fmt.Errorf("Expected message signature %v got %v\n", expected.Signature, m.Signature)
 	}
+	return nil
 
 }
 
@@ -49,14 +52,19 @@ func testGetKeys(n int) []crypto.PrivateKey {
 	return keys
 }
 
-func testMarshalling(m *Message, t *testing.T) {
+func testMarshalling(m *Message) error {
 	mMarshalled := m.Marshall()
 	size := len(mMarshalled)
 	if size != m.ByteSize() {
-		t.Error("Expected byte size", m.ByteSize(), "got", size)
+		return fmt.Errorf("Expected byte size %v got %v\n", m.ByteSize(), size)
 	}
 	mm := MessageFromBytes(mMarshalled)
-	assertMessageEquals(t, mm, m)
+	err := assertMessageEquals(mm, m)
+	if err != nil {
+		return err
+	}
+	return nil
+
 }
 
 func TestMessageMarshalling(t *testing.T) {
@@ -66,33 +74,51 @@ func TestMessageMarshalling(t *testing.T) {
 	b0 := NewBlock(testRandValue(4), nil)
 	m := NewProposeMessage(MIN_EPOCH, b0, nil, 0)
 	m.Sign(keys[0])
-	testMarshalling(m, t)
+	err := testMarshalling(m)
+	if err != nil {
+		t.Error(err)
+	}
 	// B - with certificate
 	b1 := NewBlock(testRandValue(1024), b0)
 	bc := testBlockCertificate(MIN_EPOCH, b0, 2)
 	m = NewProposeMessage(MIN_EPOCH, b1, bc, 0)
 	m.Sign(keys[0])
-	testMarshalling(m, t)
+	err = testMarshalling(m)
+	if err != nil {
+		t.Error(err)
+	}
 
 	// Test 2: Silence
 	m = NewSilenceMessage(MIN_EPOCH, 0)
 	m.Sign(keys[0])
-	testMarshalling(m, t)
+	err = testMarshalling(m)
+	if err != nil {
+		t.Error(err)
+	}
 	// Test 3: Vote
 	m = NewVoteMessage(MIN_EPOCH, b0.BlockID(), b0.Height, 5)
 	m.Sign(keys[0])
-	testMarshalling(m, t)
+	err = testMarshalling(m)
+	if err != nil {
+		t.Error(err)
+	}
 	// Test 4: Quit epoch
 	//A - silence certificate
 	sc := testSilenceCertificate(MIN_EPOCH)
 	m = NewQuitEpochMessage(MIN_EPOCH, sc)
 	m.Sign(keys[0])
-	testMarshalling(m, t)
+	err = testMarshalling(m)
+	if err != nil {
+		t.Error(err)
+	}
 	//B - block certificate
 	bc = testBlockCertificate(MIN_EPOCH, b0, 2)
 	m = NewQuitEpochMessage(MIN_EPOCH, bc)
 	m.Sign(keys[0])
-	testMarshalling(m, t)
+	err = testMarshalling(m)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestMessageSignatures(t *testing.T) {
@@ -119,7 +145,10 @@ func TestMessageSignatures(t *testing.T) {
 		t.Error("Expected byte size", m.ByteSize(), "got", len(mBytes))
 	}
 	mm = MessageFromBytes(mBytes)
-	assertMessageEquals(t, mm, m)
+	err := assertMessageEquals(mm, m)
+	if err != nil {
+		t.Error(err)
+	}
 	if !mm.VerifySignature(pub) {
 		t.Errorf("Failed to verify signature \n%v\n%v\n%v\n%v\n", m.Signature, mm.Signature, m.payload, mm.payload)
 	}

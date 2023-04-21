@@ -78,10 +78,19 @@ func TestValidProposal(t *testing.T) {
 		p.state.sendQueue[1].Type != VOTE || p.state.sendQueue[2].Type != VOTE {
 		t.Errorf("Process didn't forward(proposal + vote) or vote for the valid proposal! %v \n", len(p.state.sendQueue))
 	}
-	assertMessageEquals(t, p.state.sendQueue[0], proposal)
-	assertMessageEquals(t, p.state.sendQueue[1], vv)
+	err := assertMessageEquals(p.state.sendQueue[0], proposal)
+	if err != nil {
+		t.Error(err)
+	}
+	err = assertMessageEquals(p.state.sendQueue[1], vv)
+	if err != nil {
+		t.Error(err)
+	}
 	v := NewVoteMessage(e, b0.BlockID(), b0.Height, int16(c.Process.ID()))
-	assertMessageEquals(t, p.state.sendQueue[2], v)
+	err = assertMessageEquals(p.state.sendQueue[2], v)
+	if err != nil {
+		t.Error(err)
+	}
 
 }
 
@@ -108,12 +117,20 @@ func TestValidProposalAfterQuorumOfVotes(t *testing.T) {
 	for _, v := range votes {
 		blockCert.AddSignature(v.Signature, v.Sender)
 	}
-	assertCertificateEquals(t, c.validCertificate, blockCert)
-	assertCertificateEquals(t, c.lockedCertificate, blockCert)
+	err := assertCertificateEquals(c.validCertificate, blockCert)
+	if err != nil {
+		t.Error(err)
+	}
+	err = assertCertificateEquals(c.lockedCertificate, blockCert)
+	if err != nil {
+		t.Error(err)
+	}
 	quitEpoch := NewQuitEpochMessage(e, blockCert)
 	quitEpoch.Sender = 1
-	assertMessageEquals(t, p.state.sendQueue[0], quitEpoch)
-
+	err = assertMessageEquals(p.state.sendQueue[0], quitEpoch)
+	if err != nil {
+		t.Error(err)
+	}
 	c.ProcessMessage(proposal)
 	if !c.Proposals.Has(proposal.Block.BlockID()) ||
 		len(p.state.sendQueue) != 1 ||
@@ -243,7 +260,10 @@ func TestProcessSilenceMessage(t *testing.T) {
 	}
 	quitMsg := NewQuitEpochMessage(e, cert)
 	quitMsg.Sender = 1
-	assertMessageEquals(t, quitMsg, p.state.sendQueue[0])
+	err := assertMessageEquals(quitMsg, p.state.sendQueue[0])
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestQuitEpochMessageWitBlockCertificate(t *testing.T) {

@@ -156,29 +156,22 @@ func (c *AlterBFT) checkProposalValidity(proposal *Message) bool {
 }
 
 func (c *AlterBFT) tryToVote() {
-	if c.hasVoted {
-		return
-	}
-	if c.epochPhase != Ready {
-		return
-	}
-	if c.Proposals.Count() != 1 {
+	if c.hasVoted || c.Process.Proposer(c.Epoch) == c.Process.ID() ||
+		c.epochPhase != Ready || c.Proposals.Count() != 1 {
 		return
 	}
 
 	proposal := c.Proposals.proposals[0]
-	shouldVote := proposal.Certificate.RanksHigherOrEqual(c.lockedCertificate) &&
+	shouldVote := proposal.Certificate.RanksHigherOrEqual(c.initialLockedCertificate) &&
 		c.Process.ExtendValidChain(proposal.Block)
 
 	if shouldVote {
-		if c.Process.Proposer(c.Epoch) != c.Process.ID() {
-			proposal.setFwdSender(c.Process.ID())
-			c.Process.Forward(proposal)
-			proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender))
-			proposerVote.Signature = proposal.Signature
-			c.processVote(proposerVote)
-			c.Process.Forward(proposerVote)
-		}
+		proposal.setFwdSender(c.Process.ID())
+		c.Process.Forward(proposal)
+		proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender))
+		proposerVote.Signature = proposal.Signature
+		c.processVote(proposerVote)
+		c.Process.Forward(proposerVote)
 		c.broadcastVote(VOTE, proposal.Block)
 		c.hasVoted = true
 	}
@@ -239,7 +232,7 @@ func (c *AlterBFT) processVote(vote *Message) {
 
 // processBlockCertificate is called when cert has quorum of signatures and proposal.
 func (c *AlterBFT) processBlockCertificate(cert *Certificate) {
-	if c.epochPhase == Locked || c.epochPhase == Commit {
+	if c.epochPhase == Locked || c.epochPhase == Commit || c.epochPhase == Finished {
 		return
 	}
 	c.validCertificate = cert
@@ -334,7 +327,7 @@ func (c *AlterBFT) processTimeoutEquivocation() {
 }
 
 func (c *AlterBFT) tryToCommit() {
-	if c.decision == nil && c.epochPhase != Commit {
+	if c.decision == nil || c.epochPhase != Commit {
 		return
 	}
 

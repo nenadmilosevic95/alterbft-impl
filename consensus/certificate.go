@@ -173,7 +173,7 @@ func (c *Certificate) Payload() []byte {
 	if c.Type == BLOCK_CERT {
 		payloadSize += BlockIDSize + 8
 	}
-	return c.marshalled[:payloadSize]
+	return c.marshalled[2:payloadSize]
 }
 
 // CertificateFromBytes parses a certificate from a byte array.

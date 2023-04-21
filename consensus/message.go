@@ -34,9 +34,8 @@ type Message struct {
 	BlockID     BlockID
 	Certificate *Certificate
 
-	Sender              int
-	Signature           Signature
-	AdditionalSignature Signature
+	Sender    int
+	Signature Signature
 
 	// This sender is used only for Delta statistics
 	// and it is set when a process forward the proposal message.
@@ -45,8 +44,7 @@ type Message struct {
 	// Unexported byte version
 	marshalled []byte
 	// Message payload
-	payload           []byte
-	additionalPayload []byte
+	payload []byte
 }
 
 func NewProposeMessage(e int64, b *Block, c *Certificate, sender int16) *Message {
@@ -101,7 +99,6 @@ func MessageFromBytes(buffer []byte) *Message {
 	var blockID BlockID = nil
 	var certificate *Certificate = nil
 	var payload []byte
-	var additionalSignature []byte
 	switch mType {
 	case PROPOSE:
 		n := int32(encoding.Uint32(buffer[index:]))
@@ -128,11 +125,9 @@ func MessageFromBytes(buffer []byte) *Message {
 		index += 8
 		blockID = BlockIDFromBytes(buffer[index:])
 		index += BlockIDSize
-		payload = buffer[:index]
-		additionalSignature = SignatureFromBytes(buffer[index : index+SignatureSize])
-		index += SignatureSize
+		payload = buffer[2:index]
 	case SILENCE:
-		payload = buffer[:index]
+		payload = buffer[2:index]
 	case QUIT_EPOCH:
 		certificate = CertificateFromBytes(buffer[2:])
 		epoch = certificate.Epoch
@@ -160,9 +155,8 @@ func MessageFromBytes(buffer []byte) *Message {
 		BlockID:     blockID,
 		Certificate: certificate,
 
-		Sender:              int(sender),
-		Signature:           signature,
-		AdditionalSignature: additionalSignature,
+		Sender:    int(sender),
+		Signature: signature,
 
 		SenderFwd: int(senderFwd),
 
@@ -188,7 +182,7 @@ func (m *Message) ByteSize() int {
 	case SILENCE:
 		return 12 + SignatureSize
 	case VOTE:
-		return 20 + BlockIDSize + 2*SignatureSize
+		return 20 + BlockIDSize + SignatureSize
 	case QUIT_EPOCH:
 		return 2 + m.Certificate.ByteSize()
 	default:
@@ -256,14 +250,12 @@ func (m *Message) MarshallTo(buffer []byte) {
 		index += 8
 		n = m.BlockID.MarshallTo(buffer[index:])
 		index += n
-		m.payload = buffer[:index]
-		m.AdditionalSignature.MarshallTo(buffer[index:])
-		index += SignatureSize
+		m.payload = buffer[2:index]
 		//m.payload = make([]byte, 8+BlockIDSize)
 		//encoding.PutUint64(m.payload[0:], uint64(m.Epoch))
 		//m.BlockID.MarshallTo(m.payload[8:])
 	case SILENCE:
-		m.payload = buffer[:index]
+		m.payload = buffer[2:index]
 	case QUIT_EPOCH:
 		n = m.Certificate.MarshallTo(buffer[2:])
 	}
