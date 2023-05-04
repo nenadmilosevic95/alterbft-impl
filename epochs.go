@@ -48,6 +48,8 @@ func (p *Process) CreateNewEpoch(epoch int64) consensus.Consensus {
 		} else {
 			return consensus.NewAlterBFT(epoch, p)
 		}
+	case "delta":
+		return consensus.NewDeltaProtocol(epoch, p)
 	}
 	return nil
 }

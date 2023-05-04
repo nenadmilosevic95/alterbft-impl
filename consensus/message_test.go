@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -35,6 +36,10 @@ func assertMessageEquals(m, expected *Message) error {
 	}
 	if !m.Signature.Equal(expected.Signature) {
 		return fmt.Errorf("Expected message signature %v got %v\n", expected.Signature, m.Signature)
+	}
+
+	if (m.Type == DELTA_REQUEST || m.Type == DELTA_RESPONSE) && !bytes.Equal(m.payload, expected.payload) {
+		return fmt.Errorf("Expected message payload %v got %v\n", expected.payload, m.payload)
 	}
 	return nil
 
@@ -119,6 +124,18 @@ func TestMessageMarshalling(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	m = NewDeltaRequestMessage(testRandValue(1024), 1)
+	err = testMarshalling(m)
+	if err != nil {
+		t.Error(err)
+	}
+	m = NewDeltaResponseMessage(testRandValue(1024), 2)
+	err = testMarshalling(m)
+	if err != nil {
+		t.Error(err)
+	}
+
 }
 
 func TestMessageSignatures(t *testing.T) {
