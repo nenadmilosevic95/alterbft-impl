@@ -25,11 +25,9 @@ func NewDeltaProtocol(epoch int64, process Process) *DeltaProtocol {
 
 // Start this epoch of consensus
 func (c *DeltaProtocol) Start(validCertificate *Certificate, lockedCertificate *Certificate) {
-	if c.Process.ID() == 0 {
-		msg := NewDeltaRequestMessage(c.Process.GetValue(), 0)
-		c.timeStart = time.Now()
-		c.Process.Send(msg, 0)
-	}
+	msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
+	c.timeStart = time.Now()
+	c.Process.Send(msg, c.Process.ID())
 }
 
 // Started informs whether this epoch has been started.
@@ -58,7 +56,7 @@ func (c *DeltaProtocol) ProcessMessage(message *Message) {
 		duration := time.Now().Sub(c.timeStart).Milliseconds()
 		fmt.Printf("DeltaStat: Process %v (%v) received forwarded proposal from %v (%v) in %v ms\n", c.Process.ID(), c.Process.ID()%5, message.Sender, message.Sender%5, duration)
 		nextProcess := (message.Sender + 1) % c.Process.NumProcesses()
-		msg := NewDeltaRequestMessage(c.Process.GetValue(), 0)
+		msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 		c.timeStart = time.Now()
 		c.Process.Send(msg, nextProcess)
 	}
