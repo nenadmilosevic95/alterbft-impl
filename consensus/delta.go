@@ -54,7 +54,7 @@ func (c *DeltaProtocol) ProcessMessage(message *Message) {
 		c.Process.Send(m, message.Sender)
 	case DELTA_RESPONSE:
 		duration := time.Now().Sub(c.timeStart).Milliseconds()
-		fmt.Printf("DeltaStat: Process %v (%v) received forwarded proposal from %v (%v) in %v ms\n", c.Process.ID(), c.Process.ID()%5, message.Sender, message.Sender%5, duration)
+		fmt.Printf("%v DeltaStat: Process %v (%v) received forwarded proposal from %v (%v) in %v ms\n", time.Now(), c.Process.ID(), c.Process.ID()%5, message.Sender, message.Sender%5, duration)
 		nextProcess := (message.Sender + 1) % c.Process.NumProcesses()
 		msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 		c.timeStart = time.Now()
