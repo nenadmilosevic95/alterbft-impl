@@ -50,6 +50,10 @@ func (c *DeltaProtocol) GetEpoch() int64 {
 //
 // Contract: message belongs to this epoch of consensus.
 func (c *DeltaProtocol) ProcessMessage(message *Message) {
+	go c.processMessage(message)
+}
+
+func (c *DeltaProtocol) processMessage(message *Message) {
 	switch message.Type {
 	case DELTA_REQUEST:
 		m := NewDeltaResponseMessage(message.payload, c.Process.ID())
@@ -74,7 +78,6 @@ func (c *DeltaProtocol) ProcessMessage(message *Message) {
 		c.timeStart = time.Now()
 		c.Process.Send(msg, nextProcess)
 	}
-
 }
 
 func (c *DeltaProtocol) ProcessTimeout(timeout *Timeout) {
