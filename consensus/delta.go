@@ -10,8 +10,9 @@ type DeltaProtocol struct {
 	Epoch   int64   // Consensus epoch identifier
 	Process Process // Auxiliary methods implementation
 
-	started   bool
-	timeStart time.Time
+	started    bool
+	timeStart  time.Time
+	roundStart time.Time
 }
 
 // NewConsensus creates a consensus instance for the provided epoch.
@@ -27,6 +28,7 @@ func NewDeltaProtocol(epoch int64, process Process) *DeltaProtocol {
 func (c *DeltaProtocol) Start(validCertificate *Certificate, lockedCertificate *Certificate) {
 	msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 	c.timeStart = time.Now()
+	c.roundStart = time.Now()
 	c.Process.Send(msg, c.Process.ID())
 }
 
@@ -56,6 +58,18 @@ func (c *DeltaProtocol) ProcessMessage(message *Message) {
 		duration := time.Now().Sub(c.timeStart).Milliseconds()
 		fmt.Printf("%v DeltaStat: Process %v (%v) received forwarded proposal from %v (%v) in %v ms\n", time.Now(), c.Process.ID(), c.Process.ID()%5, message.Sender, message.Sender%5, duration)
 		nextProcess := (message.Sender + 1) % c.Process.NumProcesses()
+		// Chech if it should start new round.
+		if nextProcess == c.Process.ID() {
+			roundDuration := time.Now().Sub(c.roundStart)
+			if roundDuration > time.Minute {
+				fmt.Println("The single round lasted more than a minute!")
+			} else {
+				sleepTime := time.Minute - roundDuration
+				time.Sleep(sleepTime)
+				fmt.Printf("%v is sleeping for %v\n", c.Process.ID(), sleepTime.Seconds())
+			}
+			c.roundStart = time.Now()
+		}
 		msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 		c.timeStart = time.Now()
 		c.Process.Send(msg, nextProcess)
