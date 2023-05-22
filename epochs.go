@@ -42,14 +42,17 @@ func (p *Process) StartNewEpoch(validCertificate *consensus.Certificate, lockedC
 func (p *Process) CreateNewEpoch(epoch int64) consensus.Consensus {
 	switch p.config.Model {
 	case "sync":
+		return consensus.NewAlterBFT(epoch, p)
+	case "delta":
+		return consensus.NewDeltaProtocol(epoch, p)
+	case "slow":
 		if p.config.Byzantines[p.ID()] {
 			//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
-			return consensus.NewAlterBFT(epoch, p)
+			return consensus.NewAlterBFTSlowLeader()
 		} else {
 			return consensus.NewAlterBFT(epoch, p)
 		}
-	case "delta":
-		return consensus.NewDeltaProtocol(epoch, p)
+	case "equiv":
 	}
 	return nil
 }
