@@ -258,7 +258,11 @@ func (m *Message) MarshallTo(buffer []byte) {
 			copy(buffer[index:], []byte{1})
 			index += 1
 			end := len(buffer) - SignatureSize - 4
-			n = m.Certificate.MarshallTo(buffer[index:end])
+			if m.Certificate.marshalled != nil {
+				copy(buffer[index:end], m.Certificate.marshalled)
+			} else {
+				m.Certificate.MarshallTo(buffer[index:end])
+			}
 			index = end
 		} else {
 			copy(buffer[index:], []byte{0})
