@@ -53,6 +53,12 @@ func (p *Process) CreateNewEpoch(epoch int64) consensus.Consensus {
 			return consensus.NewAlterBFT(epoch, p)
 		}
 	case "equiv":
+		if p.config.Byzantines[p.ID()] {
+			//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
+			return consensus.NewAlterBFTEquivLeader(epoch, p)
+		} else {
+			return consensus.NewAlterBFT(epoch, p)
+		}
 	}
 	return nil
 }
