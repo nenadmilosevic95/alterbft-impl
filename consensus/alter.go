@@ -183,15 +183,15 @@ func (c *AlterBFT) checkEquivocation() {
 		return
 	}
 	proposerID := c.Process.Proposer(c.Epoch)
-	cnt := 0
 	equivocationDetected := false
+	proposerVotes := make([]*Message, 2)
 	for _, c := range c.Votes.certificates {
-		proposerVote := c.ReconstructMessage(proposerID)
-		if proposerVote != nil {
-			cnt++
+		vote := c.ReconstructMessage(proposerID)
+		if vote != nil {
+			proposerVotes = append(proposerVotes, vote)
 		}
 		// Equivocation detected.
-		if cnt > 1 {
+		if len(proposerVotes) > 1 {
 			equivocationDetected = true
 			break
 		}
@@ -206,6 +206,9 @@ func (c *AlterBFT) checkEquivocation() {
 	if c.epochPhase == Locked { // process received Ce(Bk) before this one
 		fmt.Printf("Process %v epoch %v lock+nodec+equiv value %v\n", c.Process.ID(), c.Epoch, c.validCertificate.BlockID()[0:4])
 		c.epochPhase = Finished
+	}
+	for _, vote := range proposerVotes {
+		c.Process.Forward(vote)
 	}
 }
 
