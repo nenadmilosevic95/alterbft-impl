@@ -281,8 +281,8 @@ func (c *AlterBFTEquivLeader) broadcastTwoProposals() {
 		Sender:      c.Process.ID(),
 		SenderFwd:   c.Process.ID(),
 	}
-	go c.sendToTheFirstHalf(proposal1)
-	go c.sendToTheSecondHalf(proposal2)
+	c.sendToTheFirstHalf(proposal1)
+	c.sendToTheSecondHalf(proposal2)
 }
 
 func (c *AlterBFTEquivLeader) sendToTheFirstHalf(proposal *Message) {

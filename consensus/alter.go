@@ -244,7 +244,7 @@ func (c *AlterBFT) processBlockCertificate(cert *Certificate) {
 	}
 	if c.epochPhase == EpochChange {
 		c.epochPhase = Finished
-		//fmt.Printf("Process %v epoch %v nolock+block value %v\n", c.Process.ID(), c.Epoch, c.validCertificate.BlockID()[0:4])
+		fmt.Printf("Process %v epoch %v nolock+block value %v\n", c.Process.ID(), c.Epoch, c.validCertificate.BlockID()[0:4])
 	}
 	// Whenever we receive Ce(Bk) in epoch e we can finish epoch e and start epoch e+1
 	c.broadcastQuitEpoch(cert)
@@ -278,7 +278,7 @@ func (c *AlterBFT) processSilenceCertificate(cert *Certificate) {
 	}
 	if c.epochPhase == Locked {
 		c.epochPhase = Finished
-		//fmt.Printf("Process %v epoch %v lock+nodecision value %v\n", c.Process.ID(), c.Epoch, c.lockedCertificate.BlockID()[0:4])
+		fmt.Printf("Process %v epoch %v lock+nodecision value %v\n", c.Process.ID(), c.Epoch, c.lockedCertificate.BlockID()[0:4])
 		//c.Process.Decide(c.Epoch, nil)
 		return
 	}
