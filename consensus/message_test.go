@@ -38,6 +38,13 @@ func assertMessageEquals(m, expected *Message) error {
 		return fmt.Errorf("Expected message signature %v got %v\n", expected.Signature, m.Signature)
 	}
 
+	if m.Sender2 != expected.Sender2 {
+		return fmt.Errorf("Expected message sender2 %v got %v\n", expected.Sender2, m.Sender2)
+	}
+	if !m.Signature2.Equal(expected.Signature2) {
+		return fmt.Errorf("Expected message signature2 %v got %v\n", expected.Signature2, m.Signature2)
+	}
+
 	if (m.Type == DELTA_REQUEST || m.Type == DELTA_RESPONSE) && !bytes.Equal(m.payload, expected.payload) {
 		return fmt.Errorf("Expected message payload %v got %v\n", expected.payload, m.payload)
 	}
@@ -102,6 +109,10 @@ func TestMessageMarshalling(t *testing.T) {
 	}
 	// Test 3: Vote
 	m = NewVoteMessage(MIN_EPOCH, b0.BlockID(), b0.Height, 5, 0)
+	b := make([]byte, SignatureSize)
+	b[0] = '4'
+	b[30] = '1'
+	m.Signature2 = b
 	m.Sign(keys[0])
 	err = testMarshalling(m)
 	if err != nil {

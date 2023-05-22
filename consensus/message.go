@@ -290,7 +290,7 @@ func (m *Message) MarshallTo(buffer []byte) {
 		n = m.BlockID.MarshallTo(buffer[index:])
 		index += n
 		m.payload = buffer[2:index]
-		encoding.PutUint16(buffer[index:], uint16(m.Sender))
+		encoding.PutUint16(buffer[index:], uint16(m.Sender2))
 		index += 2
 		n := m.Signature2.MarshallTo(buffer[index:])
 		index += n
