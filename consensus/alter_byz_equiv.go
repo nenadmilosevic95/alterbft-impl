@@ -60,7 +60,7 @@ func (c *AlterBFTEquivLeader) Start(validCertificate *Certificate, lockedCertifi
 	c.initialLockedCertificate = lockedCertificate
 	c.epochPhase = Ready
 	if c.Process.Proposer(c.Epoch) == c.Process.ID() {
-		c.broadcastProposal()
+		c.broadcastTwoProposals()
 	} else {
 		c.scheduleTimeout(TimeoutPropose)
 	}
@@ -113,83 +113,22 @@ func (c *AlterBFTEquivLeader) processProposal(proposal *Message) {
 	if c.Proposals.Has(proposal.Block.BlockID()) {
 		return
 	}
-	if c.checkProposalValidity(proposal) == false {
-		fmt.Printf("Invalid proposal.")
-		return
-	}
-	// Try to add new block to the blockchain!
-	ok := c.Process.AddBlock(proposal.Block)
-	if !ok {
-		fmt.Printf("P%v proposal could not be added to the blockchain in epoch %v\n", c.Process.ID(), c.Epoch)
-		return
-	}
 	// Save the proposal
 	if proposal.Epoch == c.Epoch {
 		c.Proposals.Add(proposal)
 	}
-	c.tryToVote()
-	c.tryToCommit()
+	c.vote(proposal)
 }
 
-func (c *AlterBFTEquivLeader) checkProposalValidity(proposal *Message) bool {
-	// Check if the new proposal is valid!
-	isFromProposer := proposal.Sender == c.Process.Proposer(proposal.Epoch)
-	correspondToCertificate := (proposal.Certificate == nil && proposal.Block.Height == MIN_HEIGHT) ||
-		(proposal.Certificate != nil && proposal.Block.PrevBlockID.Equal(proposal.Certificate.BlockID()))
-	isValidProposal := isFromProposer && correspondToCertificate
-	return isValidProposal
-}
-
-func (c *AlterBFTEquivLeader) tryToVote() {
-	if c.hasVoted || c.Process.Proposer(c.Epoch) == c.Process.ID() ||
-		c.epochPhase != Ready || c.Proposals.Count() != 1 {
-		return
-	}
-
-	proposal := c.Proposals.proposals[0]
-	shouldVote := proposal.Certificate.RanksHigherOrEqual(c.initialLockedCertificate) &&
-		c.Process.ExtendValidChain(proposal.Block)
-
-	if shouldVote {
-		proposal.setFwdSender(c.Process.ID())
-		c.Process.Forward(proposal)
-		proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender))
-		proposerVote.Signature = proposal.Signature
-		c.processVote(proposerVote)
-		c.Process.Forward(proposerVote)
-		c.broadcastVote(VOTE, proposal.Block)
-		c.hasVoted = true
-	}
-}
-
-func (c *AlterBFTEquivLeader) checkEquivocation() {
-	if len(c.Votes.certificates) < 2 {
-		return
-	}
-	proposerID := c.Process.Proposer(c.Epoch)
-	cnt := 0
-	equivocationDetected := false
-	for _, c := range c.Votes.certificates {
-		proposerVote := c.ReconstructMessage(proposerID)
-		if proposerVote != nil {
-			cnt++
-		}
-		// Equivocation detected.
-		if cnt > 1 {
-			equivocationDetected = true
-			break
-		}
-	}
-	if !equivocationDetected {
-		return
-	}
-	if c.epochPhase == Ready {
-		c.epochPhase = EpochChange
-		c.scheduleTimeout(TimeoutQuitEpoch)
-	}
-	if c.epochPhase == Locked { // process received Ce(Bk) before this one
-		c.epochPhase = Finished
-	}
+func (c *AlterBFTEquivLeader) vote(proposal *Message) {
+	fmt.Printf("Byzantine process %v voted for %v\n", c.Process.ID(), proposal.Block.BlockID()[0:4])
+	proposal.setFwdSender(c.Process.ID())
+	c.Process.Forward(proposal)
+	proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender))
+	proposerVote.Signature = proposal.Signature
+	c.processVote(proposerVote)
+	c.Process.Forward(proposerVote)
+	c.broadcastVote(VOTE, proposal.Block)
 }
 
 func (c *AlterBFTEquivLeader) processVote(vote *Message) {
@@ -204,10 +143,6 @@ func (c *AlterBFTEquivLeader) processVote(vote *Message) {
 		ok := blockCert.AddSignature(vote.Signature, vote.Sender)
 		if !ok {
 			return
-		}
-		// Check equivocation!
-		if vote.Sender == c.Process.Proposer(c.Epoch) {
-			c.checkEquivocation()
 		}
 		if blockCert.SignatureCount() > c.Process.NumProcesses()/2 {
 			c.processBlockCertificate(blockCert)
@@ -224,7 +159,7 @@ func (c *AlterBFTEquivLeader) processBlockCertificate(cert *Certificate) {
 	if c.epochPhase == Ready {
 		c.epochPhase = Locked
 		c.lockedCertificate = cert
-		c.scheduleTimeout(TimeoutEquivocation)
+		//c.scheduleTimeout(TimeoutEquivocation)
 	}
 	if c.epochPhase == EpochChange {
 		c.epochPhase = Finished
@@ -286,8 +221,6 @@ func (c *AlterBFTEquivLeader) ProcessTimeout(timeout *Timeout) {
 	switch timeout.Type {
 	case TimeoutPropose:
 		c.processTimeoutPropose()
-	case TimeoutEquivocation:
-		c.processTimeoutEquivocation()
 	case TimeoutQuitEpoch:
 		c.processTimeoutQuitEpoch()
 	}
@@ -300,35 +233,6 @@ func (c *AlterBFTEquivLeader) processTimeoutPropose() {
 	}
 }
 
-func (c *AlterBFTEquivLeader) processTimeoutEquivocation() {
-
-	c.scheduledTimeouts[TimeoutEquivocation] = false
-	if c.epochPhase == Locked {
-		// decision
-		c.decision = c.lockedCertificate.BlockID()
-		c.epochPhase = Commit
-		c.tryToCommit()
-	}
-}
-
-func (c *AlterBFTEquivLeader) tryToCommit() {
-	if c.decision == nil || c.epochPhase != Commit {
-		return
-	}
-
-	proposal := c.Proposals.Get(c.decision)
-	if proposal == nil {
-		return
-	}
-
-	if c.Process.ExtendValidChain(proposal.Block) {
-		fmt.Printf("Process %v epoch %v lock+decision value %v\n", c.Process.ID(), c.Epoch, c.decision[0:4])
-		c.epochPhase = Finished
-		c.Process.Decide(c.Epoch, proposal.Block)
-	}
-
-}
-
 func (c *AlterBFTEquivLeader) processTimeoutQuitEpoch() {
 	c.scheduledTimeouts[TimeoutQuitEpoch] = false
 	if c.epochPhase == EpochChange {
@@ -338,9 +242,10 @@ func (c *AlterBFTEquivLeader) processTimeoutQuitEpoch() {
 	}
 }
 
-func (c *AlterBFTEquivLeader) broadcastProposal() {
-	value := c.Process.GetValue()
-	if value == nil {
+func (c *AlterBFTEquivLeader) broadcastTwoProposals() {
+	value1 := c.Process.GetValue()
+	value2 := c.Process.GetValue()
+	if value1 == nil || value2 == nil {
 		fmt.Printf("Generator returned nil in epoch %v\n", c.Epoch)
 		return
 	}
@@ -350,20 +255,46 @@ func (c *AlterBFTEquivLeader) broadcastProposal() {
 		prevBlockID = c.validCertificate.BlockID()
 		height = c.validCertificate.Height + 1
 	}
-	block := &Block{
-		Value:       value,
+	block1 := &Block{
+		Value:       value1,
 		Height:      height,
 		PrevBlockID: prevBlockID,
 	}
-	proposal := &Message{
+	block2 := &Block{
+		Value:       value2,
+		Height:      height,
+		PrevBlockID: prevBlockID,
+	}
+	proposal1 := &Message{
 		Type:        PROPOSE,
 		Epoch:       c.Epoch,
-		Block:       block,
+		Block:       block1,
 		Certificate: c.validCertificate,
 		Sender:      c.Process.ID(),
 		SenderFwd:   c.Process.ID(),
 	}
-	c.Process.Broadcast(proposal)
+	proposal2 := &Message{
+		Type:        PROPOSE,
+		Epoch:       c.Epoch,
+		Block:       block2,
+		Certificate: c.validCertificate,
+		Sender:      c.Process.ID(),
+		SenderFwd:   c.Process.ID(),
+	}
+	go c.sendToTheFirstHalf(proposal1)
+	go c.sendToTheSecondHalf(proposal2)
+}
+
+func (c *AlterBFTEquivLeader) sendToTheFirstHalf(proposal *Message) {
+	for i := 0; i < c.Process.NumProcesses()/2; i++ {
+		c.Process.Send(proposal, i)
+	}
+}
+
+func (c *AlterBFTEquivLeader) sendToTheSecondHalf(proposal *Message) {
+	for i := c.Process.NumProcesses() / 2; i < c.Process.NumProcesses(); i++ {
+		c.Process.Send(proposal, i)
+	}
 }
 
 func (c *AlterBFTEquivLeader) broadcastVote(voteType int16, block *Block) {

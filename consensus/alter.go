@@ -166,6 +166,7 @@ func (c *AlterBFT) tryToVote() {
 		c.Process.ExtendValidChain(proposal.Block)
 
 	if shouldVote {
+		fmt.Printf("Honest process %v voted for %v\n", c.Process.ID(), proposal.Block.BlockID()[0:4])
 		proposal.setFwdSender(c.Process.ID())
 		c.Process.Forward(proposal)
 		proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender))
