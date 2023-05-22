@@ -62,10 +62,10 @@ func (cs *CertificateSet) Get(epoch int64, blockID BlockID, height int64) *Certi
 	return nil
 }
 
-func (cs *CertificateSet) GetVote(epoch int64, blockID BlockID, height int64, sender int) *Message {
+func (cs *CertificateSet) GetVote(epoch int64, blockID BlockID, height int64, sender int, proposer int) *Message {
 	for _, c := range cs.certificates {
 		if c.BlockID().Equal(blockID) && c.Height == height {
-			return c.ReconstructMessage(sender)
+			return c.ReconstructMessage(sender, proposer)
 		}
 	}
 	return nil

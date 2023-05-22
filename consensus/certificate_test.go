@@ -41,7 +41,7 @@ func testBlockCertificate(e int64, block *Block, n int) *Certificate {
 	keys := testGetKeys(n)
 	votes := make([]*Message, n)
 	for i := 0; i < len(votes); i++ {
-		votes[i] = NewVoteMessage(e, block.BlockID(), block.Height, int16(i))
+		votes[i] = NewVoteMessage(e, block.BlockID(), block.Height, int16(i), 0)
 		votes[i].Sign(keys[i])
 		bc.AddSignature(votes[i].Signature, votes[i].Sender)
 	}
@@ -79,7 +79,7 @@ func TestEmptyBlockCertificate(t *testing.T) {
 	if len(c.Signatures) != 0 {
 		t.Error("Expected no Signatures, got", c.Signatures)
 	}
-	messages := c.ReconstructMessages()
+	messages := c.ReconstructMessages(0)
 	if len(messages) != 0 {
 		t.Error("Expected no messages, got", messages)
 	}
@@ -105,7 +105,7 @@ func TestEmptyBlockCertificate(t *testing.T) {
 	if len(c.Signatures) != 0 {
 		t.Error("Expected no Signatures, got", c.Signatures)
 	}
-	messages = c.ReconstructMessages()
+	messages = c.ReconstructMessages(0)
 	if len(messages) != 0 {
 		t.Error("Expected no messages, got", messages)
 	}
@@ -133,7 +133,7 @@ func TestEmptySilenceCertificate(t *testing.T) {
 	if len(c.Signatures) != 0 {
 		t.Error("Expected no Signatures, got", c.Signatures)
 	}
-	messages := c.ReconstructMessages()
+	messages := c.ReconstructMessages(0)
 	if len(messages) != 0 {
 		t.Error("Expected no messages, got", messages)
 	}
@@ -163,7 +163,7 @@ func TestEmptySilenceCertificate(t *testing.T) {
 	if len(c.Signatures) != 0 {
 		t.Error("Expected no Signatures, got", c.Signatures)
 	}
-	messages = c.ReconstructMessages()
+	messages = c.ReconstructMessages(0)
 	if len(messages) != 0 {
 		t.Error("Expected no messages, got", messages)
 	}
@@ -185,7 +185,7 @@ func findMessageCertificate(t *testing.T, m *Message, c *Certificate, count int)
 			m.Signature, c.Signatures[m.Sender])
 	}
 	index := -1
-	messages := c.ReconstructMessages()
+	messages := c.ReconstructMessages(0)
 	//	payloads := c.ReconstructAndMarshallMessages()
 	for i := range messages {
 		if messages[i].Sender == m.Sender {
@@ -212,7 +212,7 @@ func TestCertificateWithVotes(t *testing.T) {
 	block := NewBlock(testRandValue(1024), nil)
 	c := NewBlockCertificate(e, block.BlockID(), block.Height)
 
-	v1 := NewVoteMessage(e, block.BlockID(), block.Height, 0)
+	v1 := NewVoteMessage(e, block.BlockID(), block.Height, 0, 0)
 	v1.Sign(crypto.GeneratePrivateKey())
 	c.AddSignature(v1.Signature, v1.Sender)
 	findMessageCertificate(t, v1, c, 1)
@@ -224,7 +224,7 @@ func TestCertificateWithVotes(t *testing.T) {
 	c = CertificateFromBytes(b)
 	findMessageCertificate(t, v1, c, 1)
 
-	v2 := NewVoteMessage(e, block.BlockID(), block.Height, 3)
+	v2 := NewVoteMessage(e, block.BlockID(), block.Height, 3, 0)
 	v2.Sign(crypto.GeneratePrivateKey())
 	c.AddSignature(v2.Signature, v2.Sender)
 	fmt.Print(c)
@@ -237,7 +237,7 @@ func TestCertificateWithVotes(t *testing.T) {
 	findMessageCertificate(t, v1, c, 2)
 	findMessageCertificate(t, v2, c, 2)
 
-	v3 := NewVoteMessage(e, block.BlockID(), block.Height, 27)
+	v3 := NewVoteMessage(e, block.BlockID(), block.Height, 27, 0)
 	v3.Sign(crypto.GeneratePrivateKey())
 	c.AddSignature(v3.Signature, v3.Sender)
 	findMessageCertificate(t, v1, c, 3)
@@ -299,7 +299,7 @@ func TestSignatureGetCryptoSignatures(t *testing.T) {
 	keys := []crypto.PrivateKey{crypto.GeneratePrivateKey(), crypto.GeneratePrivateKey()}
 	e := int64(3)
 	b := NewBlock(testRandValue(1024), nil)
-	votes := []*Message{NewVoteMessage(e, b.BlockID(), b.Height, 0), NewVoteMessage(e, b.BlockID(), b.Height, 1)}
+	votes := []*Message{NewVoteMessage(e, b.BlockID(), b.Height, 0, 0), NewVoteMessage(e, b.BlockID(), b.Height, 1, 0)}
 	bc := NewBlockCertificate(e, b.BlockID(), b.Height)
 	for i, v := range votes {
 		v.Sign(keys[i])

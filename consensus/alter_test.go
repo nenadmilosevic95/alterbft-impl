@@ -9,7 +9,7 @@ import (
 func getNVotes(e int64, block *Block, n int) []*Message {
 	votes := make([]*Message, n)
 	for i := 0; i < n; i++ {
-		votes[i] = NewVoteMessage(e, block.BlockID(), block.Height, int16(i))
+		votes[i] = NewVoteMessage(e, block.BlockID(), block.Height, int16(i), 0)
 		votes[i].Sign(crypto.GeneratePrivateKey())
 	}
 	return votes
@@ -70,7 +70,7 @@ func TestValidProposal(t *testing.T) {
 	proposal := NewProposeMessage(e, b0, nil, 0)
 	proposal.Marshall()
 	c.processProposal(proposal)
-	vv := NewVoteMessage(e, b0.BlockID(), b0.Height, 0)
+	vv := NewVoteMessage(e, b0.BlockID(), b0.Height, 0, 0)
 	vv.Marshall()
 	c.ProcessMessage(vv)
 	if !c.Proposals.Has(proposal.Block.BlockID()) ||
@@ -86,7 +86,7 @@ func TestValidProposal(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	v := NewVoteMessage(e, b0.BlockID(), b0.Height, int16(c.Process.ID()))
+	v := NewVoteMessage(e, b0.BlockID(), b0.Height, int16(c.Process.ID()), 0)
 	err = assertMessageEquals(p.state.sendQueue[2], v)
 	if err != nil {
 		t.Error(err)
@@ -348,8 +348,8 @@ func TestQuitEpochMessageWitBlockCertificate(t *testing.T) {
 	c.Start(nil, nil)
 	proposal = NewProposeMessage(e, b, nil, 0)
 	proposal1 := NewProposeMessage(e, b1, nil, 0)
-	vote := NewVoteMessage(e, proposal.Block.BlockID(), proposal.Block.Height, 0)
-	vote1 := NewVoteMessage(e, proposal1.Block.BlockID(), proposal1.Block.Height, 0)
+	vote := NewVoteMessage(e, proposal.Block.BlockID(), proposal.Block.Height, 0, 0)
+	vote1 := NewVoteMessage(e, proposal1.Block.BlockID(), proposal1.Block.Height, 0, 0)
 	c.ProcessMessage(vote)
 	c.ProcessMessage(vote1)
 	c.ProcessMessage(quitEpoch)
@@ -596,7 +596,7 @@ func TestNoDecisionEquivocation(t *testing.T) {
 	b0 := NewBlock(testRandValue(1024), nil)
 	b1 := NewBlock(testRandValue(1024), nil)
 	proposals := []*Message{NewProposeMessage(e, b0, nil, 0), NewProposeMessage(e, b1, nil, 0)}
-	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, int16(0)), NewVoteMessage(e, b1.BlockID(), b1.Height, int16(0))}
+	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, int16(0), 0), NewVoteMessage(e, b1.BlockID(), b1.Height, int16(0), 0)}
 	for _, m := range proposals {
 		m.Marshall()
 		c.ProcessMessage(m)
@@ -723,7 +723,7 @@ func TestNoDecisionBlockPlusEquivocation(t *testing.T) {
 
 	//Before timeoutEquivocation expires it receives another proposal
 	b1 := NewBlock(testRandValue(1024), nil)
-	secondVote := NewVoteMessage(e, b1.BlockID(), b1.Height, 0)
+	secondVote := NewVoteMessage(e, b1.BlockID(), b1.Height, 0, 0)
 	c.ProcessMessage(secondVote)
 	//This should not trigger any timeout nor produce any more messages
 	if c.epochPhase != Finished || len(p.state.sendQueue) != 4 || len(p.state.timeoutQueue) != 2 {
@@ -836,7 +836,7 @@ func TestNoDecisionSilencePlusEquivocation(t *testing.T) {
 	b0 := NewBlock(testRandValue(1024), nil)
 	b1 := NewBlock(testRandValue(1024), nil)
 	proposals := []*Message{NewProposeMessage(e, b0, nil, 0), NewProposeMessage(e, b1, nil, 0)}
-	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, 0), NewVoteMessage(e, b1.BlockID(), b1.Height, 0)}
+	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, 0, 0), NewVoteMessage(e, b1.BlockID(), b1.Height, 0, 0)}
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}
@@ -871,7 +871,7 @@ func TestNoDecisionEquivocationPlusSilence(t *testing.T) {
 	b0 := NewBlock(testRandValue(1024), nil)
 	b1 := NewBlock(testRandValue(1024), nil)
 	proposals := []*Message{NewProposeMessage(e, b0, nil, 0), NewProposeMessage(e, b1, nil, 0)}
-	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, 0), NewVoteMessage(e, b1.BlockID(), b1.Height, 0)}
+	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, 0, 0), NewVoteMessage(e, b1.BlockID(), b1.Height, 0, 0)}
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}
@@ -918,7 +918,7 @@ func TestNoDecisionEquvocationPlusBlock(t *testing.T) {
 	b0 := NewBlock(testRandValue(1024), nil)
 	b1 := NewBlock(testRandValue(1024), nil)
 	proposals := []*Message{NewProposeMessage(e, b0, nil, 0), NewProposeMessage(e, b1, nil, 0)}
-	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, 0), NewVoteMessage(e, b1.BlockID(), b1.Height, 0)}
+	votes := []*Message{NewVoteMessage(e, b0.BlockID(), b0.Height, 0, 0), NewVoteMessage(e, b1.BlockID(), b1.Height, 0, 0)}
 	for _, m := range votes {
 		c.ProcessMessage(m)
 	}

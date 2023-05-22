@@ -37,8 +37,10 @@ type Message struct {
 	BlockID     BlockID
 	Certificate *Certificate
 
-	Sender    int
-	Signature Signature
+	Sender     int
+	Signature  Signature
+	Sender2    int
+	Signature2 Signature
 
 	// This sender is used only for Delta statistics
 	// and it is set when a process forward the proposal message.
@@ -70,13 +72,14 @@ func NewSilenceMessage(e int64, sender int16) *Message {
 	}
 }
 
-func NewVoteMessage(e int64, id BlockID, height int64, sender int16) *Message {
+func NewVoteMessage(e int64, id BlockID, height int64, sender int16, sender2 int16) *Message {
 	return &Message{
 		Type:    VOTE,
 		Epoch:   e,
 		BlockID: id,
 		Height:  height,
 		Sender:  int(sender),
+		Sender2: int(sender2),
 	}
 }
 
@@ -118,6 +121,8 @@ func MessageFromBytes(buffer []byte) *Message {
 	var blockID BlockID = nil
 	var certificate *Certificate = nil
 	var payload []byte
+	var sender2 int16
+	var signature2 Signature
 	switch mType {
 	case PROPOSE:
 		n := int32(encoding.Uint32(buffer[index:]))
@@ -145,6 +150,10 @@ func MessageFromBytes(buffer []byte) *Message {
 		blockID = BlockIDFromBytes(buffer[index:])
 		index += BlockIDSize
 		payload = buffer[2:index]
+		sender2 = int16(encoding.Uint16(buffer[index:]))
+		index += 2
+		signature2 = SignatureFromBytes(buffer[index:])
+		index += SignatureSize
 	case SILENCE:
 		payload = buffer[2:index]
 	case QUIT_EPOCH:
@@ -177,8 +186,10 @@ func MessageFromBytes(buffer []byte) *Message {
 		BlockID:     blockID,
 		Certificate: certificate,
 
-		Sender:    int(sender),
-		Signature: signature,
+		Sender:     int(sender),
+		Signature:  signature,
+		Sender2:    int(sender2),
+		Signature2: signature2,
 
 		SenderFwd: int(senderFwd),
 
@@ -204,7 +215,7 @@ func (m *Message) ByteSize() int {
 	case SILENCE:
 		return 12 + SignatureSize
 	case VOTE:
-		return 20 + BlockIDSize + SignatureSize
+		return 22 + BlockIDSize + 2*SignatureSize
 	case QUIT_EPOCH:
 		return 2 + m.Certificate.ByteSize()
 	case DELTA_REQUEST, DELTA_RESPONSE:
@@ -279,6 +290,10 @@ func (m *Message) MarshallTo(buffer []byte) {
 		n = m.BlockID.MarshallTo(buffer[index:])
 		index += n
 		m.payload = buffer[2:index]
+		encoding.PutUint16(buffer[index:], uint16(m.Sender))
+		index += 2
+		n := m.Signature2.MarshallTo(buffer[index:])
+		index += n
 		//m.payload = make([]byte, 8+BlockIDSize)
 		//encoding.PutUint64(m.payload[0:], uint64(m.Epoch))
 		//m.BlockID.MarshallTo(m.payload[8:])
@@ -323,6 +338,9 @@ func (m *Message) GetCryptoSignatures() []*crypto.Signature {
 	var sigs []*crypto.Signature
 	if m.Signature != nil {
 		sigs = append(sigs, crypto.NewSignature(m.Sender, m.Payload(), m.Signature))
+	}
+	if m.Signature2 != nil {
+		sigs = append(sigs, crypto.NewSignature(m.Sender2, m.Payload(), m.Signature2))
 	}
 	if m.Certificate != nil {
 		sigs = append(sigs, m.Certificate.GetCryptoSignatures()...)

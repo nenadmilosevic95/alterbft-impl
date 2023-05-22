@@ -101,7 +101,7 @@ func TestMessageMarshalling(t *testing.T) {
 		t.Error(err)
 	}
 	// Test 3: Vote
-	m = NewVoteMessage(MIN_EPOCH, b0.BlockID(), b0.Height, 5)
+	m = NewVoteMessage(MIN_EPOCH, b0.BlockID(), b0.Height, 5, 0)
 	m.Sign(keys[0])
 	err = testMarshalling(m)
 	if err != nil {

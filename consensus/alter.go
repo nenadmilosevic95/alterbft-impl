@@ -169,11 +169,13 @@ func (c *AlterBFT) tryToVote() {
 		fmt.Printf("Honest process %v voted for %v in epoch %v.\n", c.Process.ID(), proposal.Block.BlockID()[0:4], c.Epoch)
 		proposal.setFwdSender(c.Process.ID())
 		c.Process.Forward(proposal)
-		proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender))
+		proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender), int16(proposal.Sender))
 		proposerVote.Signature = proposal.Signature
+		proposerVote.Signature2 = proposal.Signature
 		c.processVote(proposerVote)
-		c.Process.Forward(proposerVote)
-		c.broadcastVote(VOTE, proposal.Block)
+		vote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(c.Process.ID()), int16(proposal.Sender))
+		vote.Signature2 = proposal.Signature
+		c.Process.Broadcast(vote)
 		c.hasVoted = true
 	}
 }
@@ -183,33 +185,22 @@ func (c *AlterBFT) checkEquivocation() {
 		return
 	}
 	proposerID := c.Process.Proposer(c.Epoch)
-	equivocationDetected := false
-	proposerVotes := make([]*Message, 2)
-	for _, c := range c.Votes.certificates {
-		vote := c.ReconstructMessage(proposerID)
-		if vote != nil {
-			proposerVotes = append(proposerVotes, vote)
-		}
-		// Equivocation detected.
-		if len(proposerVotes) > 1 {
-			equivocationDetected = true
-			break
-		}
-	}
-	if !equivocationDetected {
-		return
-	}
+	vote1 := c.Votes.certificates[0].ReconstructMessage(proposerID, proposerID)
+	vote2 := c.Votes.certificates[1].ReconstructMessage(proposerID, proposerID)
+
 	if c.epochPhase == Ready {
 		c.epochPhase = EpochChange
+		fmt.Printf("Process %v epoch %v nolock+nodec+equiv value %v\n", c.Process.ID(), c.Epoch, c.validCertificate.BlockID()[0:4])
 		c.scheduleTimeout(TimeoutQuitEpoch)
 	}
 	if c.epochPhase == Locked { // process received Ce(Bk) before this one
 		fmt.Printf("Process %v epoch %v lock+nodec+equiv value %v\n", c.Process.ID(), c.Epoch, c.validCertificate.BlockID()[0:4])
 		c.epochPhase = Finished
 	}
-	for _, vote := range proposerVotes {
-		c.Process.Forward(vote)
-	}
+
+	c.Process.Forward(vote1)
+	c.Process.Forward(vote2)
+
 }
 
 func (c *AlterBFT) processVote(vote *Message) {
@@ -220,15 +211,15 @@ func (c *AlterBFT) processVote(vote *Message) {
 		if blockCert == nil {
 			blockCert = NewBlockCertificate(c.Epoch, vote.BlockID, vote.Height)
 			c.Votes.Add(blockCert)
+			blockCert.AddSignature(vote.Signature2, vote.Sender2)
 		}
 		ok := blockCert.AddSignature(vote.Signature, vote.Sender)
 		if !ok {
 			return
 		}
-		// Check equivocation!
-		if vote.Sender == c.Process.Proposer(c.Epoch) {
-			c.checkEquivocation()
-		}
+
+		c.checkEquivocation()
+
 		if blockCert.SignatureCount() > c.Process.NumProcesses()/2 {
 			c.processBlockCertificate(blockCert)
 		}
@@ -290,7 +281,7 @@ func (c *AlterBFT) processSilenceCertificate(cert *Certificate) {
 
 func (c *AlterBFT) processQuitEpoch(quitEpoch *Message) {
 	cert := quitEpoch.Certificate
-	messages := cert.ReconstructMessages()
+	messages := cert.ReconstructMessages(c.Process.Proposer(c.Epoch))
 	for _, m := range messages {
 		c.ProcessMessage(m)
 	}

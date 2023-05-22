@@ -124,11 +124,12 @@ func (c *AlterBFTEquivLeader) vote(proposal *Message) {
 	fmt.Printf("Byzantine process %v voted for %v in epoch %v.\n", c.Process.ID(), proposal.Block.BlockID()[0:4], c.Epoch)
 	proposal.setFwdSender(c.Process.ID())
 	c.Process.Forward(proposal)
-	proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender))
+	proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender), int16(proposal.Sender))
 	proposerVote.Signature = proposal.Signature
 	c.processVote(proposerVote)
-	c.Process.Forward(proposerVote)
-	c.broadcastVote(VOTE, proposal.Block)
+	vote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(c.Process.ID()), int16(proposal.Sender))
+	vote.Signature2 = proposal.Signature
+	c.Process.Broadcast(vote)
 }
 
 func (c *AlterBFTEquivLeader) processVote(vote *Message) {
@@ -205,7 +206,7 @@ func (c *AlterBFTEquivLeader) processSilenceCertificate(cert *Certificate) {
 
 func (c *AlterBFTEquivLeader) processQuitEpoch(quitEpoch *Message) {
 	cert := quitEpoch.Certificate
-	messages := cert.ReconstructMessages()
+	messages := cert.ReconstructMessages(c.Process.Proposer(c.Epoch))
 	for _, m := range messages {
 		c.ProcessMessage(m)
 	}

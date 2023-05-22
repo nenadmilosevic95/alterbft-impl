@@ -202,35 +202,37 @@ func CertificateFromBytes(buffer []byte) *Certificate {
 	return certificate
 }
 
-func (c *Certificate) ReconstructMessage(sender int) *Message {
+func (c *Certificate) ReconstructMessage(sender int, proposer int) *Message {
 	var message *Message
 	if signature, ok := c.Signatures[sender]; ok {
 		if c.Type == BLOCK_CERT {
-			message = NewVoteMessage(c.Epoch, c.BlockID(), c.Height, int16(sender))
+			message = NewVoteMessage(c.Epoch, c.BlockID(), c.Height, int16(sender), int16(proposer))
 		}
 		if c.Type == SILENCE_CERT {
 			message = NewSilenceMessage(c.Epoch, int16(sender))
 		}
 		message.Signature = signature
+		message.Signature2 = c.Signatures[proposer]
 	}
 	return message
 }
 
 // ReconstructMessages reconstructs the messages aggregated by the certificate.
 // FIXME: the reconstructed messages have fields shared with this certificate.
-func (c *Certificate) ReconstructMessages() []*Message {
+func (c *Certificate) ReconstructMessages(proposer int) []*Message {
 	messages := make([]*Message, len(c.Signatures))
 	i := 0
 	var message *Message
 	for sender, signature := range c.Signatures {
 		if c.Type == BLOCK_CERT {
-			message = NewVoteMessage(c.Epoch, c.BlockID(), c.Height, int16(sender))
+			message = NewVoteMessage(c.Epoch, c.BlockID(), c.Height, int16(sender), int16(proposer))
 
 		}
 		if c.Type == SILENCE_CERT {
 			message = NewSilenceMessage(c.Epoch, int16(sender))
 		}
 		message.Signature = signature
+		message.Signature2 = c.Signatures[proposer]
 		messages[i] = message
 		i++
 	}
