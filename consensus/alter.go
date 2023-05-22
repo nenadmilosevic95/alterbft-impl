@@ -204,6 +204,7 @@ func (c *AlterBFT) checkEquivocation() {
 		c.scheduleTimeout(TimeoutQuitEpoch)
 	}
 	if c.epochPhase == Locked { // process received Ce(Bk) before this one
+		fmt.Printf("Process %v epoch %v lock+nodec value %v\n", c.Process.ID(), c.Epoch, c.validCertificate.BlockID()[0:4])
 		c.epochPhase = Finished
 	}
 }
@@ -349,7 +350,7 @@ func (c *AlterBFT) processTimeoutQuitEpoch() {
 	c.scheduledTimeouts[TimeoutQuitEpoch] = false
 	if c.epochPhase == EpochChange {
 		c.epochPhase = Finished
-		fmt.Printf("Process %v epoch %v nolock+noblock\n", c.Process.ID(), c.Epoch)
+		fmt.Printf("Process %v epoch %v nolock+nodec\n", c.Process.ID(), c.Epoch)
 		c.Process.Finish(c.Epoch, c.validCertificate, c.lockedCertificate, nil)
 	}
 }
