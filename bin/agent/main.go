@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"dslab.inf.usi.ch/tendermint"
@@ -230,14 +231,13 @@ func main() {
 	if randomSeed == 0 {
 		randomSeed = eid
 	}
-	/*
-		if numByzantines > 0 {
-			byzantines := consensus.GenerateByzantines(numByzantines, n, randomSeed)
-			if byzantines[pid] {
-				config.Byzantines = byzantines
-				log.Println("Byzantine process")
-			}
-		}*/
+	if numByzantines > 0 {
+		byzantines := generateByzantines(numByzantines, n, randomSeed)
+		if byzantines[pid] {
+			config.Byzantines = byzantines
+			log.Println("Byzantine process")
+		}
+	}
 	config.ByzTime = byzTime
 	config.ByzAttack = byzAttack
 	process = tendermint.NewProcess(pid, n, config, gtransport, workload)
@@ -268,4 +268,22 @@ func forceExit(duration int) {
 	log.Println("forced exit after", time.Now().Sub(start))
 	panic("Agent maximum duration reached")
 
+}
+
+func generateByzantines(f, n int, seed int64) map[int]bool {
+	byzantines := getRandomByzantines(f, n, seed)
+	return byzantines
+}
+
+func getRandomByzantines(f, n int, seed int64) map[int]bool {
+	src := rand.NewSource(seed)
+	randGen := rand.New(src)
+	byzantines := make(map[int]bool, f)
+	for len(byzantines) != f {
+		id := randGen.Intn(n - 1)
+		if id != 0 {
+			byzantines[id] = true
+		}
+	}
+	return byzantines
 }
