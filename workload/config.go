@@ -17,6 +17,10 @@ type Config struct {
 	// values. Once this queue gets full, new delivery data is dropped.
 	DeliveryQueueSize int
 
+	// ValuesQueueSize is the size of the queue storing data of generated
+	// values.
+	ValuesQueueSize int
+
 	// LogBufferSize is the size in bytes for the buffered log writer.
 	// Data is actually logged to disk when the writer buffer is full.
 	LogBufferSize int
@@ -41,6 +45,7 @@ type Config struct {
 func DefaultConfig() *Config {
 	return &Config{
 		DeliveryQueueSize:     128,
+		ValuesQueueSize:       128,
 		RandomValuesBytesSize: MinValuesBytesSize,
 
 		LogBufferSize: 1024 * 1024,

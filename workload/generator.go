@@ -35,7 +35,7 @@ func NewGenerator(id int, config *Config) *Generator {
 		// FIXME: crypto/rand is slower than math/rand but produces
 		// actually random values, not requiring a seed.
 		randomizer:    rand.Reader,
-		values:        make(chan types.Value), // unbuffered
+		values:        make(chan types.Value, config.ValuesQueueSize), // unbuffered
 		deliveryQueue: make(chan *Delivery, config.DeliveryQueueSize),
 	}
 	return g
