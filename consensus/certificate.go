@@ -207,12 +207,13 @@ func (c *Certificate) ReconstructMessage(sender int, proposer int) *Message {
 	if signature, ok := c.Signatures[sender]; ok {
 		if c.Type == BLOCK_CERT {
 			message = NewVoteMessage(c.Epoch, c.BlockID(), c.Height, int16(sender), int16(proposer))
+			message.Signature2 = c.Signatures[proposer]
 		}
 		if c.Type == SILENCE_CERT {
 			message = NewSilenceMessage(c.Epoch, int16(sender))
 		}
 		message.Signature = signature
-		message.Signature2 = c.Signatures[proposer]
+
 	}
 	return message
 }
@@ -226,13 +227,13 @@ func (c *Certificate) ReconstructMessages(proposer int) []*Message {
 	for sender, signature := range c.Signatures {
 		if c.Type == BLOCK_CERT {
 			message = NewVoteMessage(c.Epoch, c.BlockID(), c.Height, int16(sender), int16(proposer))
-
+			message.Signature2 = c.Signatures[proposer]
 		}
 		if c.Type == SILENCE_CERT {
 			message = NewSilenceMessage(c.Epoch, int16(sender))
 		}
 		message.Signature = signature
-		message.Signature2 = c.Signatures[proposer]
+
 		messages[i] = message
 		i++
 	}

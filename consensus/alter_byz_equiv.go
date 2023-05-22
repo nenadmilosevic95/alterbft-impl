@@ -299,18 +299,6 @@ func (c *AlterBFTEquivLeader) sendToTheSecondHalf(proposal *Message) {
 	}
 }
 
-func (c *AlterBFTEquivLeader) broadcastVote(voteType int16, block *Block) {
-	vote := &Message{
-		Type:    voteType,
-		Epoch:   c.Epoch,
-		BlockID: block.BlockID(),
-		Height:  block.Height,
-		Sender:  c.Process.ID(),
-	}
-	//fmt.Printf("Process %v (%v) epoch %v vote for value %v\n", c.Process.ID(), c.Process.ID()%5, c.Epoch, vote.BlockID[0:4])
-	c.Process.Broadcast(vote)
-}
-
 func (c *AlterBFTEquivLeader) broadcastSilence() {
 	silence := &Message{
 		Type:   SILENCE,
