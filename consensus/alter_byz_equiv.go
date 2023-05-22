@@ -121,7 +121,7 @@ func (c *AlterBFTEquivLeader) processProposal(proposal *Message) {
 }
 
 func (c *AlterBFTEquivLeader) vote(proposal *Message) {
-	fmt.Printf("Byzantine process %v voted for %v\n", c.Process.ID(), proposal.Block.BlockID()[0:4])
+	fmt.Printf("Byzantine process %v voted for %v in epoch %v.\n", c.Process.ID(), proposal.Block.BlockID()[0:4], c.Epoch)
 	proposal.setFwdSender(c.Process.ID())
 	c.Process.Forward(proposal)
 	proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender))
