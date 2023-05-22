@@ -11,9 +11,8 @@ import (
 
 // Writer is a helper to log data to a file.
 type Writer struct {
-	file      *os.File
-	buffer    *bufio.Writer
-	startTime int64
+	file   *os.File
+	buffer *bufio.Writer
 }
 
 // NewWriter creates a new writer for a load generator.
@@ -56,18 +55,13 @@ func (w *Writer) LogDelivery(d *Delivery) {
 	out.WriteString(formatTime(d.Time))
 	out.WriteString("\t")
 	out.WriteString(fmt.Sprint(d.Height))
-	if d.Height == 0 {
-		w.startTime = time.Now().UnixMilli() - d.Latency().Milliseconds()
-	}
 	//	out.WriteString("\t")
 	//	out.WriteString(fmt.Sprint(d.Epoch))
 	//	out.WriteString("\t")
 	//	out.WriteString(base64.RawStdEncoding.EncodeToString(d.BlockID))
-	if d.Submission != nil && d.Height > 0 && d.Height%64 == 63 {
-		latency := time.Now().UnixMilli() - w.startTime
-		w.startTime = time.Now().UnixMilli()
+	if d.Submission != nil {
 		out.WriteString("\t")
-		out.WriteString(fmt.Sprintf("%.6f", float64(latency/1000)))
+		out.WriteString(fmt.Sprintf("%.6f", d.Latency().Seconds()))
 	}
 	out.WriteString("\n")
 	w.buffer.WriteString(out.String())
