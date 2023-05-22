@@ -126,6 +126,7 @@ func (c *AlterBFTEquivLeader) vote(proposal *Message) {
 	c.Process.Forward(proposal)
 	proposerVote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(proposal.Sender), int16(proposal.Sender))
 	proposerVote.Signature = proposal.Signature
+	proposerVote.Signature2 = proposal.Signature
 	c.processVote(proposerVote)
 	vote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(c.Process.ID()), int16(proposal.Sender))
 	vote.Signature2 = proposal.Signature
