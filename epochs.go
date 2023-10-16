@@ -43,6 +43,8 @@ func (p *Process) CreateNewEpoch(epoch int64) consensus.Consensus {
 	switch p.config.Model {
 	case "sync":
 		return consensus.NewAlterBFT(epoch, p)
+	case "fast":
+		return consensus.NewFastAlterBFT(epoch, p)
 	case "delta":
 		return consensus.NewDeltaProtocol(epoch, p)
 	case "slow":
