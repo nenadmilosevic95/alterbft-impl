@@ -49,6 +49,8 @@ var byzAttack string
 
 var maxEpoch int64
 
+var chunksNumber int
+
 var log net.Log
 var cproxy *proxy.Proxy
 
@@ -88,6 +90,7 @@ func init() {
 	flag.Int64Var(&randomSeed, "seed", 0, "Random seed for the experiment. When unset, the experiment ID is used.")
 	flag.StringVar(&topology, "topology", "", "Topology of the agents in the experiment.")
 	flag.Int64Var(&maxEpoch, "maxEpoch", 100, "Maximum number of epochs to run in the experiment.")
+	flag.IntVar(&chunksNumber, "cNum", 64, "Number of chunks.")
 
 	// Gossip filtering parameters
 	flag.IntVar(&gossip.LRUCacheSize, "gcache", 262144, "Gossip LRU cache size.")
@@ -240,6 +243,7 @@ func main() {
 	}
 	config.ByzTime = byzTime
 	config.ByzAttack = byzAttack
+	config.ChunksNumber = chunksNumber
 	process = tendermint.NewProcess(pid, n, config, gtransport, workload)
 	log.Printf("Created Tendermint process in zone %v\n", zone)
 

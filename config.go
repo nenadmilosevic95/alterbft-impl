@@ -36,6 +36,9 @@ type Config struct {
 	// Byz attack
 	ByzAttack string
 
+	// Number of chunks in delta_chunked
+	ChunksNumber int
+
 	// Lower bound of the consensus instances window.
 	// Prefix of decided instances of consensus to track.
 	PastInstancesTracked int64
@@ -101,5 +104,7 @@ func DefaultConfig() *Config {
 		ScheduleTimeouts:  true,
 		TimeoutSmallDelta: time.Second / 5,
 		TimeoutBigDelta:   time.Second,
+
+		ChunksNumber: 64,
 	}
 }
