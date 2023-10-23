@@ -34,7 +34,7 @@ func (c *DeltaChunkedProtocol) Start(validCertificate *Certificate, lockedCertif
 	msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 	c.timeStart = time.Now()
 	for i := 0; i < c.chunksNumber; i++ {
-		go c.Process.Send(msg, c.Process.ID())
+		c.Process.Send(msg, c.Process.ID())
 	}
 
 }
@@ -57,7 +57,7 @@ func (c *DeltaChunkedProtocol) GetEpoch() int64 {
 //
 // Contract: message belongs to this epoch of consensus.
 func (c *DeltaChunkedProtocol) ProcessMessage(message *Message) {
-	c.processMessage(message)
+	go c.processMessage(message)
 }
 
 func (c *DeltaChunkedProtocol) processMessage(message *Message) {
@@ -67,7 +67,7 @@ func (c *DeltaChunkedProtocol) processMessage(message *Message) {
 		if c.counters[message.Sender] == c.chunksNumber {
 			m := NewDeltaResponseMessage(message.payload, c.Process.ID())
 			for i := 0; i < c.chunksNumber; i++ {
-				go c.Process.Send(m, message.Sender)
+				c.Process.Send(m, message.Sender)
 			}
 			c.counters[message.Sender] = 0
 		}
@@ -81,7 +81,7 @@ func (c *DeltaChunkedProtocol) processMessage(message *Message) {
 			msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 			c.timeStart = time.Now()
 			for i := 0; i < c.chunksNumber; i++ {
-				go c.Process.Send(msg, nextProcess)
+				c.Process.Send(msg, nextProcess)
 			}
 		}
 	}
