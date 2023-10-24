@@ -75,7 +75,7 @@ func (c *HotStuff) ProcessMessage(message *Message) {
 		fmt.Printf("Message received while in Finished phase: %v\n", message)
 		return
 	}
-	fmt.Printf("Message received: %v\n", message)
+	fmt.Printf("Message received: %v %v %v \n", message.Type, message.Epoch, message.Sender)
 	switch message.Type {
 	case PROPOSE:
 		c.processProposal(message)
@@ -188,6 +188,7 @@ func (c *HotStuff) broadcastProposal() {
 		Sender:      c.Process.ID(),
 		SenderFwd:   c.Process.ID(),
 	}
+	fmt.Printf("Process %v (%v) epoch %v propose value %v\n", c.Process.ID(), c.Process.ID()%5, block.Height, block.BlockID()[0:4])
 	c.Process.Broadcast(proposal)
 }
 
@@ -198,7 +199,7 @@ func (c *HotStuff) sendVote(voteType int16, blockID BlockID, epoch int64) {
 		BlockID: blockID,
 		Sender:  c.Process.ID(),
 	}
-	//fmt.Printf("Process %v (%v) epoch %v vote for value %v\n", c.Process.ID(), c.Process.ID()%5, c.Epoch, vote.BlockID[0:4])
+	fmt.Printf("Process %v (%v) epoch %v vote for value %v\n", c.Process.ID(), c.Process.ID()%5, epoch, vote.BlockID[0:4])
 	// send vote to the proposer of the following epoch
 	c.Process.Send(vote, c.Process.Proposer(epoch+1))
 }
