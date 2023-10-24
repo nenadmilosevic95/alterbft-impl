@@ -39,7 +39,9 @@ func (c *HotStuff) Start(validCertificate *Certificate, lockedCertificate *Certi
 	c.lockedCertificate = lockedCertificate
 	c.epochPhase = Ready
 
-	c.broadcastProposal()
+	if c.Process.ID() == 0 {
+		c.broadcastProposal()
+	}
 
 	for _, m := range c.messages {
 		c.ProcessMessage(m)
