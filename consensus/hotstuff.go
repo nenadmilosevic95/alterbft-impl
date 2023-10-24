@@ -106,7 +106,7 @@ func (c *HotStuff) processProposal(proposal *Message) {
 		c.lockedCertificate.block = c.Proposals.Get(c.lockedCertificate.BlockID()).Block
 	}
 	// Vote for new block
-	c.sendVote(VOTE, proposal.Block.BlockID(), block.Height)
+	c.sendVote(VOTE, block)
 	// Commit block.Height-2
 	if block.Height >= 2 {
 		if c.lockedCertificate.block.PrevBlockID == nil || c.Proposals.Get(c.lockedCertificate.block.PrevBlockID) == nil {
@@ -192,16 +192,16 @@ func (c *HotStuff) broadcastProposal() {
 	c.Process.Broadcast(proposal)
 }
 
-func (c *HotStuff) sendVote(voteType int16, blockID BlockID, epoch int64) {
+func (c *HotStuff) sendVote(voteType int16, block *Block) {
 	vote := &Message{
 		Type:    voteType,
-		Epoch:   epoch,
-		BlockID: blockID,
+		Epoch:   block.Height,
+		BlockID: block.BlockID(),
+		Height:  block.Height,
 		Sender:  c.Process.ID(),
 	}
-	fmt.Printf("Process %v (%v) epoch %v vote for value %v\n", c.Process.ID(), c.Process.ID()%5, epoch, vote.BlockID[0:4])
-	// send vote to the proposer of the following epoch
-	c.Process.Send(vote, c.Process.Proposer(epoch+1))
+	//fmt.Printf("Process %v (%v) epoch %v vote for value %v\n", c.Process.ID(), c.Process.ID()%5, c.Epoch, vote.BlockID[0:4])
+	c.Process.Send(vote, c.Process.Proposer(block.Height+1))
 }
 
 // ProcessMessage processes a consensus timeout.
