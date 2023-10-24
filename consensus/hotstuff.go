@@ -97,8 +97,10 @@ func (c *HotStuff) processProposal(proposal *Message) {
 	// Save the proposal
 	c.Proposals.Add(proposal)
 	// Update locked certificate
-	c.lockedCertificate = cert
-	c.lockedCertificate.block = c.Proposals.Get(c.lockedCertificate.BlockID()).Block
+	if cert != nil {
+		c.lockedCertificate = cert
+		c.lockedCertificate.block = c.Proposals.Get(c.lockedCertificate.BlockID()).Block
+	}
 	// Vote for new block
 	c.sendVote(VOTE, proposal.Block.BlockID(), block.Height)
 	// Commit block.Height-2
