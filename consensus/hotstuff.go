@@ -67,13 +67,15 @@ func (c *HotStuff) GetEpoch() int64 {
 // Contract: message belongs to this epoch of consensus.
 func (c *HotStuff) ProcessMessage(message *Message) {
 	if c.epochPhase == Inactive {
-		//fmt.Printf("Message received while in Inactive phase: %v\n", message)
+		fmt.Printf("Message received while in Inactive phase: %v\n", message)
 		c.messages = append(c.messages, message)
 		return
 	}
 	if c.epochPhase == Finished {
+		fmt.Printf("Message received while in Finished phase: %v\n", message)
 		return
 	}
+	fmt.Printf("Message received: %v\n", message)
 	switch message.Type {
 	case PROPOSE:
 		c.processProposal(message)
