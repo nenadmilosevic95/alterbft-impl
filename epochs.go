@@ -45,6 +45,8 @@ func (p *Process) CreateNewEpoch(epoch int64) consensus.Consensus {
 		return consensus.NewAlterBFT(epoch, p)
 	case "fast":
 		return consensus.NewFastAlterBFT(epoch, p)
+	case "hot-stuff":
+		return consensus.NewHotStuff(epoch, p)
 	case "delta":
 		return consensus.NewDeltaProtocol(epoch, p)
 	case "delta-chunk":
