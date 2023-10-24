@@ -16,9 +16,6 @@ type HotStuff struct {
 
 	// Pending messages
 	messages []*Message
-
-	// Avoids duplicated timeouts
-	scheduledTimeouts []bool
 }
 
 // NewConsensus creates a consensus instance for the provided epoch.
@@ -35,7 +32,6 @@ func (c *HotStuff) Init() {
 	c.epochPhase = Inactive
 	c.Proposals = NewProposalSet()
 	c.Votes = NewCertificateSet()
-	c.scheduledTimeouts = make([]bool, TimeoutQuitEpoch+1)
 }
 
 // Start this epoch of consensus
@@ -88,7 +84,7 @@ func (c *HotStuff) processProposal(proposal *Message) {
 	block := proposal.Block
 	cert := proposal.Certificate
 	// Check if the new proposal is valid!
-	if !block.PrevBlockID.Equal(cert.BlockID()) || !block.Extend(c.lockedCertificate.block) {
+	if !block.PrevBlockID.Equal(cert.BlockID()) {
 		panic(fmt.Errorf("Equivocated block received in epoch %v\n", block.Height))
 	}
 	// We try to add block to the blockchain
@@ -102,11 +98,14 @@ func (c *HotStuff) processProposal(proposal *Message) {
 	c.Proposals.Add(proposal)
 	// Update locked certificate
 	c.lockedCertificate = cert
-	c.lockedCertificate.block = c.Proposals.Get(c.lockedCertificate.blockID).Block
+	c.lockedCertificate.block = c.Proposals.Get(c.lockedCertificate.BlockID()).Block
 	// Vote for new block
 	c.sendVote(VOTE, proposal.Block.BlockID(), block.Height)
 	// Commit block.Height-2
 	if block.Height >= 2 {
+		if c.lockedCertificate.block.PrevBlockID == nil || c.Proposals.Get(c.lockedCertificate.block.PrevBlockID) == nil {
+			panic(fmt.Errorf("The block is not there yet!"))
+		}
 		commitBlock := c.Proposals.Get(c.lockedCertificate.block.PrevBlockID).Block
 		c.Process.Decide(commitBlock.Height, commitBlock)
 	}
@@ -170,6 +169,9 @@ func (c *HotStuff) broadcastProposal() {
 	if c.lockedCertificate == nil {
 		block = NewBlock(value, nil)
 	} else {
+		if c.lockedCertificate.block == nil {
+			panic(fmt.Errorf("Block of lockedCertificate not set!"))
+		}
 		block = NewBlock(value, c.lockedCertificate.block)
 	}
 	proposal := &Message{
