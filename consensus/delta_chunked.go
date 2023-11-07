@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"fmt"
+	"sync/atomic"
 	"time"
 )
 
@@ -15,8 +16,8 @@ type DeltaChunkedProtocol struct {
 	started   bool
 	timeStart time.Time
 
-	counters [5]int
-	cnt      int
+	counters [5]int32
+	cnt      int32
 }
 
 // NewConsensus creates a consensus instance for the provided epoch.
@@ -34,7 +35,7 @@ func (c *DeltaChunkedProtocol) Start(validCertificate *Certificate, lockedCertif
 	msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 	c.timeStart = time.Now()
 	for i := 0; i < c.chunksNumber; i++ {
-		c.Process.Send(msg, c.Process.ID())
+		go c.Process.Send(msg, c.Process.ID())
 	}
 
 }
@@ -63,25 +64,25 @@ func (c *DeltaChunkedProtocol) ProcessMessage(message *Message) {
 func (c *DeltaChunkedProtocol) processMessage(message *Message) {
 	switch message.Type {
 	case DELTA_REQUEST:
-		c.counters[message.Sender]++
-		if c.counters[message.Sender] == c.chunksNumber {
+		atomic.AddInt32(&c.counters[message.Sender], 1)
+		if atomic.LoadInt32(&c.counters[message.Sender]) == int32(c.chunksNumber) {
 			m := NewDeltaResponseMessage(message.payload, c.Process.ID())
 			for i := 0; i < c.chunksNumber; i++ {
-				c.Process.Send(m, message.Sender)
+				go c.Process.Send(m, message.Sender)
 			}
-			c.counters[message.Sender] = 0
+			atomic.StoreInt32(&c.counters[message.Sender], 0)
 		}
 	case DELTA_RESPONSE:
-		c.cnt++
-		if c.cnt == c.chunksNumber {
+		atomic.AddInt32(&c.cnt, 1)
+		if atomic.LoadInt32(&c.cnt) == int32(c.chunksNumber) {
 			duration := time.Now().Sub(c.timeStart).Milliseconds()
 			fmt.Printf("%v DeltaStat: Process %v (%v) received forwarded proposal from %v (%v) in %v ms\n", time.Now(), c.Process.ID(), c.Process.ID()%5, message.Sender, message.Sender%5, duration)
-			c.cnt = 0
+			atomic.StoreInt32(&c.cnt, 0)
 			nextProcess := (message.Sender + 1) % c.Process.NumProcesses()
 			msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 			c.timeStart = time.Now()
 			for i := 0; i < c.chunksNumber; i++ {
-				c.Process.Send(msg, nextProcess)
+				go c.Process.Send(msg, nextProcess)
 			}
 		}
 	}
