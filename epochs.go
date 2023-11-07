@@ -45,8 +45,6 @@ func (p *Process) CreateNewEpoch(epoch int64) consensus.Consensus {
 		return consensus.NewAlterBFT(epoch, p)
 	case "fast":
 		return consensus.NewFastAlterBFT(epoch, p)
-	case "hot-stuff":
-		return consensus.NewHotStuff(epoch, p)
 	case "delta":
 		return consensus.NewDeltaProtocol(epoch, p)
 	case "delta-chunk":
@@ -84,13 +82,6 @@ func (p *Process) FinishEpoch(epoch int64) bool {
 }
 
 func (p *Process) GetConsensusEpoch(epoch int64) consensus.Consensus {
-	// HotStuff only has one epoch
-	if p.config.Model == "hot-stuff" {
-		if p.epochs[0] == nil {
-			p.epochs[0] = p.CreateNewEpoch(0)
-		}
-		return p.epochs[0]
-	}
 	index := epoch % p.config.MaxActiveEpochs
 	if p.epochs[index] != nil && p.epochs[index].GetEpoch() == epoch {
 		return p.epochs[index]

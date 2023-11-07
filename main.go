@@ -1,7 +1,6 @@
 package tendermint
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -85,7 +84,7 @@ func (p *Process) processConsensusMessage(message *consensus.Message) {
 	//duration := time.Now().Sub(startTime).Milliseconds()
 	//p.config.Log.Printf("DeltaStat: In epoch %v process %v (%v) received forwarded proposal from %v (%v) in %v ms\n", message.Epoch, p.ID(), p.ID()%5, message.SenderFwd, message.SenderFwd%5, duration)
 	//}
-	fmt.Printf("Message received %v %v %v\n", message.Type, message.Epoch, message.Sender)
+	//fmt.Printf("Message received %v %v %v\n", message.Type, message.Epoch, message.Sender)
 	epoch := p.GetConsensusEpoch(message.Epoch)
 	if epoch != nil {
 		epoch.ProcessMessage(message)

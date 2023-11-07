@@ -1,7 +1,6 @@
 package gossip
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -40,7 +39,6 @@ func (g *Gossip) Send(message net.Message, pids ...int) {
 		to:      pids,
 	}
 	g.UnicastQueue.Add(gmessage)
-	fmt.Print("Added message!")
 }
 
 func (g *Gossip) sendUnicastMessage(message *Message) {
