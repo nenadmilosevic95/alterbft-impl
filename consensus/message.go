@@ -160,8 +160,8 @@ func MessageFromBytes(buffer []byte) *Message {
 		certificate = CertificateFromBytes(buffer[2:])
 		epoch = certificate.Epoch
 	case DELTA_REQUEST, DELTA_RESPONSE:
-		payload = buffer[2 : len(buffer)-4]
-		index = len(buffer) - 4
+		payload = buffer[2 : len(buffer)-2]
+		index = len(buffer) - 2
 	}
 	var sender int16
 	if mType != QUIT_EPOCH {
@@ -219,7 +219,7 @@ func (m *Message) ByteSize() int {
 	case QUIT_EPOCH:
 		return 2 + m.Certificate.ByteSize()
 	case DELTA_REQUEST, DELTA_RESPONSE:
-		return 2 + len(m.payload) + 4
+		return 2 + len(m.payload) + 2
 	default:
 		return 0
 	}

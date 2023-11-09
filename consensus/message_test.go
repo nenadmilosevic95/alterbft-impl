@@ -136,7 +136,9 @@ func TestMessageMarshalling(t *testing.T) {
 		t.Error(err)
 	}
 
-	m = NewDeltaRequestMessage(testRandValue(1024), 1)
+	b = testRandValue(1024)
+	b[0] = 0
+	m = NewDeltaRequestMessage(b, 0)
 	err = testMarshalling(m)
 	if err != nil {
 		t.Error(err)
