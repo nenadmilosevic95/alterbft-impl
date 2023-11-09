@@ -129,6 +129,8 @@ func main() {
 	log.Printf("Small delta: %v\n", smallDelta)
 	log.Printf("Big delta: %v\n", bigDelta)
 
+	log.Printf("Chunk number: %v\n", chunksNumber)
+
 	log.Printf("Number of byzantines: %v\n", numByzantines)
 
 	log.Printf("Byz time: %v\n", byzTime)
