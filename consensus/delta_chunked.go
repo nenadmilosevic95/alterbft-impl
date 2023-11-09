@@ -2,7 +2,6 @@ package consensus
 
 import (
 	"fmt"
-	"sync/atomic"
 	"time"
 )
 
@@ -16,8 +15,9 @@ type DeltaChunkedProtocol struct {
 	started   bool
 	timeStart time.Time
 
-	counters [5]int32
-	cnt      int32
+	counters [5]int
+	channels [5]chan *Message
+	cnt      int
 }
 
 // NewConsensus creates a consensus instance for the provided epoch.
@@ -27,17 +27,28 @@ func NewDeltaChunkedProtocol(epoch int64, process Process, chunksNumber int) *De
 		Process:      process,
 		chunksNumber: chunksNumber,
 	}
+	for i, _ := range c.channels {
+		c.channels[i] = make(chan *Message)
+		c.counters[i] = 0
+	}
 	return c
 }
 
 // Start this epoch of consensus
 func (c *DeltaChunkedProtocol) Start(validCertificate *Certificate, lockedCertificate *Certificate) {
+	c.startListeningRoutines()
 	msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 	c.timeStart = time.Now()
 	for i := 0; i < c.chunksNumber; i++ {
 		go c.Process.Send(msg, c.Process.ID())
 	}
 
+}
+
+func (c *DeltaChunkedProtocol) startListeningRoutines() {
+	for i, ch := range c.channels {
+		go c.ProcessMessageRoutine(ch, i)
+	}
 }
 
 // Started informs whether this epoch has been started.
@@ -58,26 +69,37 @@ func (c *DeltaChunkedProtocol) GetEpoch() int64 {
 //
 // Contract: message belongs to this epoch of consensus.
 func (c *DeltaChunkedProtocol) ProcessMessage(message *Message) {
-	go c.processMessage(message)
+	c.channels[message.Sender] <- message
+}
+
+func (c *DeltaChunkedProtocol) ProcessMessageRoutine(messageChan chan *Message, senderID int) {
+	for {
+		message, more := <-messageChan
+		if !more {
+			fmt.Printf("Sender %d channel closed\n", senderID)
+			return
+		}
+		c.processMessage(message)
+	}
 }
 
 func (c *DeltaChunkedProtocol) processMessage(message *Message) {
 	switch message.Type {
 	case DELTA_REQUEST:
-		atomic.AddInt32(&c.counters[message.Sender], 1)
-		if atomic.LoadInt32(&c.counters[message.Sender]) == int32(c.chunksNumber) {
+		c.counters[message.Sender]++
+		if c.counters[message.Sender] == c.chunksNumber {
 			m := NewDeltaResponseMessage(message.payload, c.Process.ID())
 			for i := 0; i < c.chunksNumber; i++ {
 				go c.Process.Send(m, message.Sender)
 			}
-			atomic.StoreInt32(&c.counters[message.Sender], 0)
+			c.counters[message.Sender] = 0
 		}
 	case DELTA_RESPONSE:
-		atomic.AddInt32(&c.cnt, 1)
-		if atomic.LoadInt32(&c.cnt) == int32(c.chunksNumber) {
+		c.cnt++
+		if c.cnt == c.chunksNumber {
 			duration := time.Now().Sub(c.timeStart).Milliseconds()
 			fmt.Printf("%v DeltaStat: Process %v (%v) received forwarded proposal from %v (%v) in %v ms\n", time.Now(), c.Process.ID(), c.Process.ID()%5, message.Sender, message.Sender%5, duration)
-			atomic.StoreInt32(&c.cnt, 0)
+			c.cnt = 0
 			nextProcess := (message.Sender + 1) % c.Process.NumProcesses()
 			msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 			c.timeStart = time.Now()
