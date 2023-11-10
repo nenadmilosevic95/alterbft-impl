@@ -79,6 +79,9 @@ func (c *DeltaChunkedProtocol) ProcessMessageRoutine(messageChan chan *Message, 
 			fmt.Printf("Sender %d channel closed\n", senderID)
 			return
 		}
+		if message.Sender != senderID {
+			panic(fmt.Errorf("Channel %v received message from sender %v\n", senderID, message.Sender))
+		}
 		c.processMessage(message)
 	}
 }
