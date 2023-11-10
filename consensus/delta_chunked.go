@@ -37,9 +37,10 @@ func NewDeltaChunkedProtocol(epoch int64, process Process, chunksNumber int) *De
 // Start this epoch of consensus
 func (c *DeltaChunkedProtocol) Start(validCertificate *Certificate, lockedCertificate *Certificate) {
 	c.startListeningRoutines()
-	msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 	c.timeStart = time.Now()
 	for i := 0; i < c.chunksNumber; i++ {
+		// we need to create a new message because otherwise we can have concurrency issues while marshalling the message
+		msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 		go c.Process.Send(msg, c.Process.ID())
 	}
 
@@ -91,8 +92,8 @@ func (c *DeltaChunkedProtocol) processMessage(message *Message) {
 	case DELTA_REQUEST:
 		c.counters[message.Sender]++
 		if c.counters[message.Sender] == c.chunksNumber {
-			m := NewDeltaResponseMessage(message.payload, c.Process.ID())
 			for i := 0; i < c.chunksNumber; i++ {
+				m := NewDeltaResponseMessage(message.payload, c.Process.ID())
 				go c.Process.Send(m, message.Sender)
 			}
 			c.counters[message.Sender] = 0
@@ -104,9 +105,9 @@ func (c *DeltaChunkedProtocol) processMessage(message *Message) {
 			fmt.Printf("%v DeltaStat: Process %v (%v) received forwarded proposal from %v (%v) in %v ms\n", time.Now(), c.Process.ID(), c.Process.ID()%5, message.Sender, message.Sender%5, duration)
 			c.cnt = 0
 			nextProcess := (message.Sender + 1) % c.Process.NumProcesses()
-			msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 			c.timeStart = time.Now()
 			for i := 0; i < c.chunksNumber; i++ {
+				msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 				go c.Process.Send(msg, nextProcess)
 			}
 		}
