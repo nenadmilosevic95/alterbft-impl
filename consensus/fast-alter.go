@@ -142,7 +142,7 @@ func (c *FastAlterBFT) checkProposalValidity(proposal *Message) bool {
 
 func (c *FastAlterBFT) tryToVote() {
 	if c.hasVoted || c.Process.Proposer(c.Epoch) == c.Process.ID() ||
-		c.epochPhase != Ready || c.Proposals.Count() != 1 {
+		c.epochPhase == EpochChange || c.Proposals.Count() != 1 {
 		return
 	}
 
