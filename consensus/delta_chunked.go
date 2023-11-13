@@ -41,7 +41,7 @@ func (c *DeltaChunkedProtocol) Start(validCertificate *Certificate, lockedCertif
 	for i := 0; i < c.chunksNumber; i++ {
 		// we need to create a new message because otherwise we can have concurrency issues while marshalling the message
 		msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
-		go c.Process.Send(msg, c.Process.ID())
+		c.Process.Send(msg, c.Process.ID())
 	}
 
 }
@@ -94,7 +94,7 @@ func (c *DeltaChunkedProtocol) processMessage(message *Message) {
 		if c.counters[message.Sender] == c.chunksNumber {
 			for i := 0; i < c.chunksNumber; i++ {
 				m := NewDeltaResponseMessage(message.payload, c.Process.ID())
-				go c.Process.Send(m, message.Sender)
+				c.Process.Send(m, message.Sender)
 			}
 			c.counters[message.Sender] = 0
 		}
@@ -108,7 +108,7 @@ func (c *DeltaChunkedProtocol) processMessage(message *Message) {
 			c.timeStart = time.Now()
 			for i := 0; i < c.chunksNumber; i++ {
 				msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
-				go c.Process.Send(msg, nextProcess)
+				c.Process.Send(msg, nextProcess)
 			}
 		}
 	}
