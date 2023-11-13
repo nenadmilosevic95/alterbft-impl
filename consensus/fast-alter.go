@@ -309,6 +309,7 @@ func (c *FastAlterBFT) processTimeoutEquivocation() {
 	c.scheduledTimeouts[TimeoutEquivocation] = false
 	if c.epochPhase == Locked {
 		// decision
+		fmt.Println("no-fast-path-decision")
 		c.decision = c.lockedCertificate.BlockID()
 		c.epochPhase = Commit
 		c.tryToCommit()
