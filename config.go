@@ -77,6 +77,7 @@ type Config struct {
 	// Defining maximum communication delay in synchronous system.
 	TimeoutSmallDelta time.Duration
 	TimeoutBigDelta   time.Duration
+	FastAlterEnabled  bool
 
 	// If set, defines the interval for publishing process stats.
 	StatsPublishingInterval time.Duration
@@ -104,6 +105,8 @@ func DefaultConfig() *Config {
 		ScheduleTimeouts:  true,
 		TimeoutSmallDelta: time.Second / 5,
 		TimeoutBigDelta:   time.Second,
+
+		FastAlterEnabled: false,
 
 		ChunksNumber: 64,
 	}

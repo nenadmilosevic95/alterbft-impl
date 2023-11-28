@@ -40,7 +40,7 @@ var semanticFiltering bool
 var model string
 var smallDelta int
 var bigDelta int
-
+var fastOpt bool
 var coolTime int
 
 var numByzantines int
@@ -64,7 +64,8 @@ func init() {
 	flag.IntVar(&pid, "i", -1, "Process ID.")
 	flag.IntVar(&n, "n", 0, "Number of processes.")
 	flag.IntVar(&k, "k", 0, "Target number of neighbors.")
-	flag.StringVar(&model, "mod", "sync", "Network model.")
+	flag.StringVar(&model, "mod", "alter", "Network model.")
+	flag.BoolVar(&fastOpt, "fast", false, "Enable FastAlter optimization. ")
 
 	flag.IntVar(&numByzantines, "byz", 0, "Number of byzantines.")
 	flag.IntVar(&byzTime, "byzTime", 0, "Time a byzantine leader should wait.")
@@ -125,6 +126,7 @@ func main() {
 	//log.Println("Topology:", topology)
 
 	log.Printf("Model: %v\n", model)
+	log.Printf("FastAlterOptimization enabled: %v\n", fastOpt)
 
 	log.Printf("Small delta: %v\n", smallDelta)
 	log.Printf("Big delta: %v\n", bigDelta)
@@ -232,6 +234,7 @@ func main() {
 	config.TimeoutSmallDelta = time.Duration(smallDelta) * time.Millisecond
 	config.TimeoutBigDelta = time.Duration(bigDelta) * time.Millisecond
 	config.Model = model
+	config.FastAlterEnabled = fastOpt
 	config.MaxEpochToStart = maxEpoch
 	if randomSeed == 0 {
 		randomSeed = eid

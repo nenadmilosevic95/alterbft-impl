@@ -11,7 +11,7 @@ func NewAlterBFTSlowLeader() *AlterBFTSlowLeader {
 }
 
 // Start this epoch of consensus
-func (c *AlterBFTSlowLeader) Start(validCertificate *Certificate, lockedCertificate *Certificate) {
+func (c *AlterBFTSlowLeader) Start(lockedCertificate *Certificate) {
 	c.started = true
 }
 

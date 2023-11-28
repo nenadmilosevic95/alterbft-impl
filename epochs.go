@@ -41,28 +41,26 @@ func (p *Process) StartNewEpoch(lockedCertificate *consensus.Certificate) {
 
 func (p *Process) CreateNewEpoch(epoch int64) consensus.Consensus {
 	switch p.config.Model {
-	case "sync":
-		return consensus.NewFastAlterBFT(epoch, p, false)
-	case "fast":
-		return consensus.NewFastAlterBFT(epoch, p, true)
+	case "alter":
+		return consensus.NewFastAlterBFT(epoch, p, p.config.FastAlterEnabled)
 	case "delta":
 		return consensus.NewDeltaProtocol(epoch, p)
 	case "delta-chunk":
 		return consensus.NewDeltaChunkedProtocol(epoch, p, p.config.ChunksNumber)
-		/*case "slow":
-			if p.config.Byzantines[p.ID()] {
-				//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
-				return consensus.NewAlterBFTSlowLeader()
-			} else {
-				return consensus.NewAlterBFT(epoch, p)
-			}
-		case "equiv":
-			if p.config.Byzantines[p.ID()] {
-				//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
-				return consensus.NewAlterBFTEquivLeader(epoch, p)
-			} else {
-				return consensus.NewAlterBFT(epoch, p)
-			}*/
+	case "slow":
+		if p.config.Byzantines[p.ID()] {
+			//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
+			return consensus.NewAlterBFTSlowLeader()
+		} else {
+			return consensus.NewFastAlterBFT(epoch, p, p.config.FastAlterEnabled)
+		}
+	case "equiv":
+		if p.config.Byzantines[p.ID()] {
+			//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
+			return consensus.NewAlterBFTEquivLeader(epoch, p, p.config.FastAlterEnabled)
+		} else {
+			return consensus.NewFastAlterBFT(epoch, p, p.config.FastAlterEnabled)
+		}
 	}
 	return nil
 }
