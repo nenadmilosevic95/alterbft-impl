@@ -53,7 +53,7 @@ func (p *Process) MainLoop() {
 	p.verifier.Start()
 	p.timeoutTicker.Start()
 	// FIXME: handle the initialization of the first instance/epoch
-	p.StartNewEpoch(nil, nil, nil)
+	p.StartNewEpoch(nil)
 	if p.config.StatsPublishingInterval > 0 {
 		p.statsTicker = time.Tick(p.config.StatsPublishingInterval)
 	}

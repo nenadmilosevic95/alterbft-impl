@@ -105,6 +105,11 @@ func (p *TestProcess) TimeoutQuitEpoch(epoch int64) time.Duration {
 	return time.Second
 }
 
+func (p *TestProcess) TimeoutEpochChange(epoch int64) time.Duration {
+	// TODO:
+	return time.Second
+}
+
 // Test methods that use TestProcess
 /*
 func assertEqualProcessState(t *testing.T, p, expected *ProcessState) {

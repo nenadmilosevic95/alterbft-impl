@@ -13,7 +13,7 @@ func (p *Process) BootstrapEpochWindow() {
 }
 
 // StartNewEpoch creates and starts a new epoch of consensus
-func (p *Process) StartNewEpoch(validCertificate *consensus.Certificate, lockedCertificate *consensus.Certificate, oldCertificate *consensus.Certificate) {
+func (p *Process) StartNewEpoch(lockedCertificate *consensus.Certificate) {
 	activeEpochs := p.lastEpoch - p.lastDecided
 	if activeEpochs >= p.config.MaxActiveEpochs {
 		fmt.Errorf("Epoch window is not big enough: %v > %v!", activeEpochs, p.config.MaxActiveEpochs)
@@ -35,34 +35,34 @@ func (p *Process) StartNewEpoch(validCertificate *consensus.Certificate, lockedC
 	if p.epochs[index] == nil || p.epochs[index].GetEpoch() != p.lastEpoch {
 		p.epochs[index] = p.CreateNewEpoch(p.lastEpoch)
 	}
-	p.epochs[index].Start(validCertificate, lockedCertificate)
+	p.epochs[index].Start(lockedCertificate)
 	p.stats.InstanceStarted()
 }
 
 func (p *Process) CreateNewEpoch(epoch int64) consensus.Consensus {
 	switch p.config.Model {
 	case "sync":
-		return consensus.NewAlterBFT(epoch, p)
+		return consensus.NewFastAlterBFT(epoch, p, false)
 	case "fast":
-		return consensus.NewFastAlterBFT(epoch, p)
+		return consensus.NewFastAlterBFT(epoch, p, true)
 	case "delta":
 		return consensus.NewDeltaProtocol(epoch, p)
 	case "delta-chunk":
 		return consensus.NewDeltaChunkedProtocol(epoch, p, p.config.ChunksNumber)
-	case "slow":
-		if p.config.Byzantines[p.ID()] {
-			//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
-			return consensus.NewAlterBFTSlowLeader()
-		} else {
-			return consensus.NewAlterBFT(epoch, p)
-		}
-	case "equiv":
-		if p.config.Byzantines[p.ID()] {
-			//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
-			return consensus.NewAlterBFTEquivLeader(epoch, p)
-		} else {
-			return consensus.NewAlterBFT(epoch, p)
-		}
+		/*case "slow":
+			if p.config.Byzantines[p.ID()] {
+				//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
+				return consensus.NewAlterBFTSlowLeader()
+			} else {
+				return consensus.NewAlterBFT(epoch, p)
+			}
+		case "equiv":
+			if p.config.Byzantines[p.ID()] {
+				//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
+				return consensus.NewAlterBFTEquivLeader(epoch, p)
+			} else {
+				return consensus.NewAlterBFT(epoch, p)
+			}*/
 	}
 	return nil
 }

@@ -3,7 +3,7 @@ package consensus
 type Consensus interface {
 	GetEpoch() int64
 
-	Start(validCertificate *Certificate, lockedCertificate *Certificate)
+	Start(lockedCertificate *Certificate)
 
 	Stop()
 

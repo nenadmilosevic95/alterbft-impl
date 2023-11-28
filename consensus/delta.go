@@ -24,7 +24,7 @@ func NewDeltaProtocol(epoch int64, process Process) *DeltaProtocol {
 }
 
 // Start this epoch of consensus
-func (c *DeltaProtocol) Start(validCertificate *Certificate, lockedCertificate *Certificate) {
+func (c *DeltaProtocol) Start(lockedCertificate *Certificate) {
 	msg := NewDeltaRequestMessage(c.Process.GetValue(), c.Process.ID())
 	c.timeStart = time.Now()
 	c.Process.Send(msg, c.Process.ID())

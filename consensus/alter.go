@@ -1,5 +1,6 @@
 package consensus
 
+/*
 import "fmt"
 
 //import "fmt"
@@ -427,3 +428,4 @@ func (c *AlterBFT) scheduleTimeout(timeoutType int16) {
 		c.scheduledTimeouts[timeoutType] = true
 	}
 }
+*/

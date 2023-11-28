@@ -206,9 +206,9 @@ func (p *Process) Decide(epoch int64, block *consensus.Block) {
 }
 
 // Finish an epoch of consensus, this should start new epoch.
-func (p *Process) Finish(epoch int64, validCertificate *consensus.Certificate, lockedCertificate *consensus.Certificate, oldCertificate *consensus.Certificate) {
+func (p *Process) Finish(epoch int64, lockedCertificate *consensus.Certificate) {
 	if p.lastEpoch == epoch {
-		p.StartNewEpoch(validCertificate, lockedCertificate, oldCertificate)
+		p.StartNewEpoch(lockedCertificate)
 	}
 }
 
@@ -250,6 +250,11 @@ func (p *Process) TimeoutEquivocation(epoch int64) time.Duration {
 
 // TimeoutQuitEpoch returns the timeout duration of QuitEpochStep.
 func (p *Process) TimeoutQuitEpoch(epoch int64) time.Duration {
+	return 2 * p.config.TimeoutSmallDelta
+}
+
+// TimeoutEpochChange returns the timeout duration of timeout needed to learn the highest locked certificate.
+func (p *Process) TimeoutEpochChange(epoch int64) time.Duration {
 	return 2 * p.config.TimeoutSmallDelta
 }
 

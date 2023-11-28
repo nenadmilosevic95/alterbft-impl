@@ -2,6 +2,19 @@ package consensus
 
 import "fmt"
 
+const MIN_HEIGHT = 0
+const MIN_EPOCH = 0
+
+// EpochPhase: phase of an epoch of consensus.
+const (
+	Inactive    = iota // epoch hasn't started yet or has finished
+	Ready              // phase before any of the certificates is observed
+	Locked             // phase after Ce(Bk) certificate is observed
+	Commit             // phase after deciding but before receiving all the blocks
+	EpochChange        // phase after Ce(SILENCE) or Ce(EQUIV) is observed
+	Finished
+)
+
 // Consensus implement one epoch of consensus.
 type FastAlterBFT struct {
 	Epoch   int64   // Consensus epoch identifier
@@ -9,9 +22,9 @@ type FastAlterBFT struct {
 
 	epochPhase int
 
-	initialLockedCertificate *Certificate
-	lockedCertificate        *Certificate
-	validCertificate         *Certificate
+	fastAlterEnabled bool
+
+	lockedCertificate *Certificate
 
 	// Helpers for storing messages
 	Proposals          *ProposalSet
@@ -31,10 +44,11 @@ type FastAlterBFT struct {
 }
 
 // NewConsensus creates a consensus instance for the provided epoch.
-func NewFastAlterBFT(epoch int64, process Process) *FastAlterBFT {
+func NewFastAlterBFT(epoch int64, process Process, fastAlterEnabled bool) *FastAlterBFT {
 	c := &FastAlterBFT{
-		Epoch:   epoch,
-		Process: process,
+		Epoch:            epoch,
+		Process:          process,
+		fastAlterEnabled: fastAlterEnabled,
 	}
 	c.Init()
 	return c
@@ -49,18 +63,20 @@ func (c *FastAlterBFT) Init() {
 	// TO DO: here we need to add also other sets for different models
 	c.Precommits = nil
 	c.Commits = nil
-	c.scheduledTimeouts = make([]bool, TimeoutQuitEpoch+1)
+	c.scheduledTimeouts = make([]bool, TimeoutEpochChange+1)
 	c.hasVoted = false
 }
 
 // Start this epoch of consensus
-func (c *FastAlterBFT) Start(validCertificate *Certificate, lockedCertificate *Certificate) {
-	c.validCertificate = validCertificate
+func (c *FastAlterBFT) Start(lockedCertificate *Certificate) {
 	c.lockedCertificate = lockedCertificate
-	c.initialLockedCertificate = lockedCertificate
 	c.epochPhase = Ready
 	if c.Process.Proposer(c.Epoch) == c.Process.ID() {
-		c.broadcastProposal()
+		if c.Epoch == MIN_EPOCH || c.lockedCertificate.Epoch == c.Epoch-1 {
+			c.broadcastProposal()
+		} else {
+			c.scheduleTimeout(TimeoutEpochChange)
+		}
 	} else {
 		c.scheduleTimeout(TimeoutPropose)
 	}
@@ -126,9 +142,11 @@ func (c *FastAlterBFT) processProposal(proposal *Message) {
 	// Save the proposal
 	if proposal.Epoch == c.Epoch {
 		c.Proposals.Add(proposal)
+		c.tryToVote()
 	}
-	c.tryToVote()
+	// maybe this block vas missing
 	c.tryToCommit()
+
 }
 
 func (c *FastAlterBFT) checkProposalValidity(proposal *Message) bool {
@@ -147,8 +165,7 @@ func (c *FastAlterBFT) tryToVote() {
 	}
 
 	proposal := c.Proposals.proposals[0]
-	shouldVote := proposal.Certificate.RanksHigherOrEqual(c.initialLockedCertificate) &&
-		c.Process.ExtendValidChain(proposal.Block)
+	shouldVote := proposal.Block.BlockID().Equal(c.lockedCertificate.BlockID()) || proposal.Certificate.RanksHigherOrEqual(c.lockedCertificate)
 
 	if shouldVote {
 		fmt.Printf("Honest process %v voted for %v in epoch %v.\n", c.Process.ID(), proposal.Block.BlockID()[0:4], c.Epoch)
@@ -162,6 +179,9 @@ func (c *FastAlterBFT) tryToVote() {
 		vote.Signature2 = proposal.Signature
 		c.Process.Broadcast(vote)
 		c.hasVoted = true
+		if proposal.Certificate.RanksHigherOrEqual(c.lockedCertificate) {
+			c.lockedCertificate = proposal.Certificate
+		}
 	}
 }
 
@@ -175,11 +195,16 @@ func (c *FastAlterBFT) checkEquivocation() {
 
 	if c.epochPhase == Ready {
 		c.epochPhase = EpochChange
-		fmt.Printf("Process %v epoch %v nolock+nodec+equiv value %v\n", c.Process.ID(), c.Epoch, c.validCertificate.BlockID()[0:4])
-		c.scheduleTimeout(TimeoutQuitEpoch)
+		fmt.Printf("Process %v epoch %v nolock+nodec+equiv value %v\n", c.Process.ID(), c.Epoch, c.lockedCertificate.BlockID()[0:4])
+		if c.fastAlterEnabled {
+			c.scheduleTimeout(TimeoutQuitEpoch)
+		} else {
+			fmt.Printf("Process %v epoch %v nolock+nodecision\n", c.Process.ID(), c.Epoch)
+			c.Process.Finish(c.Epoch, c.lockedCertificate)
+		}
 	}
 	if c.epochPhase == Locked { // process received Ce(Bk) before this one
-		fmt.Printf("Process %v epoch %v lock+nodec+equiv value %v\n", c.Process.ID(), c.Epoch, c.validCertificate.BlockID()[0:4])
+		fmt.Printf("Process %v epoch %v lock+nodec+equiv value %v\n", c.Process.ID(), c.Epoch, c.lockedCertificate.BlockID()[0:4])
 		c.epochPhase = Finished
 	}
 
@@ -189,8 +214,6 @@ func (c *FastAlterBFT) checkEquivocation() {
 }
 
 func (c *FastAlterBFT) processVote(vote *Message) {
-	// we don't process votes in locked phase because we know that
-	// process already received Ce(Bk) for some block Bk in epoch e
 	if c.epochPhase != Commit {
 		blockCert := c.Votes.Get(c.Epoch, vote.BlockID, vote.Height)
 		if blockCert == nil {
@@ -210,7 +233,7 @@ func (c *FastAlterBFT) processVote(vote *Message) {
 		}
 
 		// Fast path commit
-		if blockCert.SignatureCount() == c.Process.NumProcesses() && c.epochPhase == Locked {
+		if c.fastAlterEnabled && blockCert.SignatureCount() == c.Process.NumProcesses() && c.epochPhase == Locked {
 			// decision
 			c.decision = c.lockedCertificate.BlockID()
 			c.epochPhase = Commit
@@ -224,20 +247,22 @@ func (c *FastAlterBFT) processBlockCertificate(cert *Certificate) {
 	if c.epochPhase == Locked || c.epochPhase == Commit || c.epochPhase == Finished {
 		return
 	}
-	c.validCertificate = cert
-	if c.epochPhase == Ready {
-		c.epochPhase = Locked
+	if cert.RanksHigherOrEqual(c.lockedCertificate) {
 		c.lockedCertificate = cert
-		c.scheduleTimeout(TimeoutEquivocation)
 	}
-	if c.epochPhase == EpochChange {
-		c.epochPhase = Finished
-		fmt.Printf("Process %v epoch %v nolock+block value %v\n", c.Process.ID(), c.Epoch, c.validCertificate.BlockID()[0:4])
+	if cert.Epoch == c.Epoch {
+		if c.epochPhase == Ready {
+			c.epochPhase = Locked
+			c.scheduleTimeout(TimeoutEquivocation)
+		}
+		if c.epochPhase == EpochChange {
+			c.epochPhase = Finished
+			fmt.Printf("Process %v epoch %v nolock+block value %v\n", c.Process.ID(), c.Epoch, c.lockedCertificate.BlockID()[0:4])
+		}
+		// Whenever we receive Ce(Bk) in epoch e we can finish epoch e and start epoch e+1
+		c.broadcastQuitEpoch(cert)
+		c.Process.Finish(c.Epoch, c.lockedCertificate)
 	}
-	// Whenever we receive Ce(Bk) in epoch e we can finish epoch e and start epoch e+1
-	c.broadcastQuitEpoch(cert)
-	c.Process.Finish(c.Epoch, c.validCertificate, c.lockedCertificate, nil)
-
 }
 
 func (c *FastAlterBFT) processSilence(silence *Message) {
@@ -260,7 +285,12 @@ func (c *FastAlterBFT) processSilenceCertificate(cert *Certificate) {
 		c.epochPhase = EpochChange
 		//fmt.Printf("Process %v in epoch %v didn't lock!\n", c.Process.ID(), c.Epoch)
 		c.broadcastQuitEpoch(cert)
-		c.scheduleTimeout(TimeoutQuitEpoch)
+		if c.fastAlterEnabled {
+			c.scheduleTimeout(TimeoutQuitEpoch)
+		} else {
+			fmt.Printf("Process %v epoch %v nolock+nodecision\n", c.Process.ID(), c.Epoch)
+			c.Process.Finish(c.Epoch, c.lockedCertificate)
+		}
 		//c.Process.Decide(c.Epoch, nil)
 		return
 	}
@@ -294,6 +324,8 @@ func (c *FastAlterBFT) ProcessTimeout(timeout *Timeout) {
 		c.processTimeoutEquivocation()
 	case TimeoutQuitEpoch:
 		c.processTimeoutQuitEpoch()
+	case TimeoutEpochChange:
+		c.processTimeoutEpochChange()
 	}
 }
 
@@ -339,8 +371,13 @@ func (c *FastAlterBFT) processTimeoutQuitEpoch() {
 	if c.epochPhase == EpochChange {
 		c.epochPhase = Finished
 		fmt.Printf("Process %v epoch %v nolock+nodecision\n", c.Process.ID(), c.Epoch)
-		c.Process.Finish(c.Epoch, c.validCertificate, c.lockedCertificate, nil)
+		c.Process.Finish(c.Epoch, c.lockedCertificate)
 	}
+}
+
+func (c *FastAlterBFT) processTimeoutEpochChange() {
+	c.scheduledTimeouts[TimeoutEpochChange] = false
+	c.broadcastProposal()
 }
 
 func (c *FastAlterBFT) broadcastProposal() {
@@ -351,9 +388,9 @@ func (c *FastAlterBFT) broadcastProposal() {
 	}
 	var prevBlockID BlockID
 	var height int64 = MIN_HEIGHT
-	if c.validCertificate != nil {
-		prevBlockID = c.validCertificate.BlockID()
-		height = c.validCertificate.Height + 1
+	if c.lockedCertificate != nil {
+		prevBlockID = c.lockedCertificate.BlockID()
+		height = c.lockedCertificate.Height + 1
 	}
 	block := &Block{
 		Value:       value,
@@ -364,7 +401,7 @@ func (c *FastAlterBFT) broadcastProposal() {
 		Type:        PROPOSE,
 		Epoch:       c.Epoch,
 		Block:       block,
-		Certificate: c.validCertificate,
+		Certificate: c.lockedCertificate,
 		Sender:      c.Process.ID(),
 		SenderFwd:   c.Process.ID(),
 	}
@@ -397,11 +434,21 @@ func (c *FastAlterBFT) broadcastSilence() {
 func (c *FastAlterBFT) broadcastQuitEpoch(certificate *Certificate) {
 	quitEpoch := &Message{
 		Type:        QUIT_EPOCH,
-		Epoch:       c.Epoch,
+		Epoch:       certificate.Epoch,
 		Certificate: certificate,
 		Sender:      c.Process.ID(),
 	}
 	c.Process.Broadcast(quitEpoch)
+}
+
+func (c *FastAlterBFT) sendCertificateToLeader() {
+	quitEpoch := &Message{
+		Type:        QUIT_EPOCH,
+		Epoch:       c.lockedCertificate.Epoch,
+		Certificate: c.lockedCertificate,
+		Sender:      c.Process.ID(),
+	}
+	c.Process.Send(quitEpoch, c.Process.Proposer(c.Epoch))
 }
 
 // Schedule a timeout for the epoch phase, if not already scheduled.
@@ -412,6 +459,8 @@ func (c *FastAlterBFT) scheduleTimeout(timeoutType int16) {
 			duration = c.Process.TimeoutEquivocation(c.Epoch)
 		} else if timeoutType == TimeoutQuitEpoch {
 			duration = c.Process.TimeoutQuitEpoch(c.Epoch)
+		} else if timeoutType == TimeoutEpochChange {
+			duration = c.Process.TimeoutEpochChange(c.Epoch)
 		}
 		c.Process.Schedule(&Timeout{
 			Type:     timeoutType,

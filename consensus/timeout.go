@@ -9,6 +9,7 @@ const (
 	TimeoutPropose = iota
 	TimeoutEquivocation
 	TimeoutQuitEpoch
+	TimeoutEpochChange
 )
 
 // Timeout is a generic consensus timeout.
