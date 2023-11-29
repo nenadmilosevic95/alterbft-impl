@@ -206,9 +206,9 @@ func (p *Process) Decide(epoch int64, block *consensus.Block) {
 }
 
 // Finish an epoch of consensus, this should start new epoch.
-func (p *Process) Finish(epoch int64, lockedCertificate *consensus.Certificate) {
+func (p *Process) Finish(epoch int64, lockedCertificate *consensus.Certificate, sentLockedCertificate bool) {
 	if p.lastEpoch == epoch {
-		p.StartNewEpoch(lockedCertificate)
+		p.StartNewEpoch(lockedCertificate, sentLockedCertificate)
 	}
 }
 

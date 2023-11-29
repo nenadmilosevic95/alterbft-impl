@@ -43,7 +43,7 @@ type Process interface {
 	Decide(epoch int64, block *Block)
 
 	// Finish an epoch of consensus.
-	Finish(epoch int64, lockedCertificate *Certificate)
+	Finish(epoch int64, lockedCertificate *Certificate, sentLockedCertificate bool)
 
 	// TimeoutPropose returns the timeout duration within which proposer should propose.
 	TimeoutPropose(epoch int64) time.Duration

@@ -35,7 +35,7 @@ func NewDeltaChunkedProtocol(epoch int64, process Process, chunksNumber int) *De
 }
 
 // Start this epoch of consensus
-func (c *DeltaChunkedProtocol) Start(lockedCertificate *Certificate) {
+func (c *DeltaChunkedProtocol) Start(lockedCertificate *Certificate, sentLockedCertificate bool) {
 	c.startListeningRoutines()
 	c.timeStart = time.Now()
 	for i := 0; i < c.chunksNumber; i++ {

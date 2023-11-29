@@ -13,7 +13,7 @@ func (p *Process) BootstrapEpochWindow() {
 }
 
 // StartNewEpoch creates and starts a new epoch of consensus
-func (p *Process) StartNewEpoch(lockedCertificate *consensus.Certificate) {
+func (p *Process) StartNewEpoch(lockedCertificate *consensus.Certificate, sentLockedCertificate bool) {
 	activeEpochs := p.lastEpoch - p.lastDecided
 	if activeEpochs >= p.config.MaxActiveEpochs {
 		fmt.Errorf("Epoch window is not big enough: %v > %v!", activeEpochs, p.config.MaxActiveEpochs)
@@ -35,7 +35,7 @@ func (p *Process) StartNewEpoch(lockedCertificate *consensus.Certificate) {
 	if p.epochs[index] == nil || p.epochs[index].GetEpoch() != p.lastEpoch {
 		p.epochs[index] = p.CreateNewEpoch(p.lastEpoch)
 	}
-	p.epochs[index].Start(lockedCertificate)
+	p.epochs[index].Start(lockedCertificate, sentLockedCertificate)
 	p.stats.InstanceStarted()
 }
 

@@ -24,7 +24,8 @@ type FastAlterBFT struct {
 
 	fastAlterEnabled bool
 
-	lockedCertificate *Certificate
+	lockedCertificate     *Certificate
+	sentLockedCertificate bool
 
 	// Helpers for storing messages
 	Proposals          *ProposalSet
@@ -65,11 +66,13 @@ func (c *FastAlterBFT) Init() {
 	c.Commits = nil
 	c.scheduledTimeouts = make([]bool, TimeoutEpochChange+1)
 	c.hasVoted = false
+	c.sentLockedCertificate = false
 }
 
 // Start this epoch of consensus
-func (c *FastAlterBFT) Start(lockedCertificate *Certificate) {
+func (c *FastAlterBFT) Start(lockedCertificate *Certificate, sentLockedCertificate bool) {
 	c.lockedCertificate = lockedCertificate
+	c.sentLockedCertificate = sentLockedCertificate
 	c.epochPhase = Ready
 	if c.Process.Proposer(c.Epoch) == c.Process.ID() {
 		if c.Epoch == MIN_EPOCH || c.lockedCertificate.Epoch == c.Epoch-1 {
@@ -78,6 +81,9 @@ func (c *FastAlterBFT) Start(lockedCertificate *Certificate) {
 			c.scheduleTimeout(TimeoutEpochChange)
 		}
 	} else {
+		if !c.sentLockedCertificate && c.lockedCertificate != nil {
+			c.sendCertificateToLeader()
+		}
 		c.scheduleTimeout(TimeoutPropose)
 	}
 	// Process messages that process received before starting an epoch.
@@ -180,6 +186,7 @@ func (c *FastAlterBFT) tryToVote() {
 		c.Process.Broadcast(vote)
 		c.hasVoted = true
 		if proposal.Certificate.RanksHigherOrEqual(c.lockedCertificate) {
+			c.sentLockedCertificate = false
 			c.lockedCertificate = proposal.Certificate
 		}
 	}
@@ -200,7 +207,7 @@ func (c *FastAlterBFT) checkEquivocation() {
 			c.scheduleTimeout(TimeoutQuitEpoch)
 		} else {
 			fmt.Printf("Process %v epoch %v nolock+nodecision\n", c.Process.ID(), c.Epoch)
-			c.Process.Finish(c.Epoch, c.lockedCertificate)
+			c.Process.Finish(c.Epoch, c.lockedCertificate, c.sentLockedCertificate)
 		}
 	}
 	if c.epochPhase == Locked { // process received Ce(Bk) before this one
@@ -249,6 +256,7 @@ func (c *FastAlterBFT) processBlockCertificate(cert *Certificate) {
 	}
 	if cert.RanksHigherOrEqual(c.lockedCertificate) {
 		c.lockedCertificate = cert
+		c.sentLockedCertificate = false
 	}
 	if cert.Epoch == c.Epoch {
 		if c.epochPhase == Ready {
@@ -261,7 +269,8 @@ func (c *FastAlterBFT) processBlockCertificate(cert *Certificate) {
 		}
 		// Whenever we receive Ce(Bk) in epoch e we can finish epoch e and start epoch e+1
 		c.broadcastQuitEpoch(cert)
-		c.Process.Finish(c.Epoch, c.lockedCertificate)
+		c.sentLockedCertificate = true
+		c.Process.Finish(c.Epoch, c.lockedCertificate, c.sentLockedCertificate)
 	}
 }
 
@@ -289,7 +298,7 @@ func (c *FastAlterBFT) processSilenceCertificate(cert *Certificate) {
 			c.scheduleTimeout(TimeoutQuitEpoch)
 		} else {
 			fmt.Printf("Process %v epoch %v nolock+nodecision\n", c.Process.ID(), c.Epoch)
-			c.Process.Finish(c.Epoch, c.lockedCertificate)
+			c.Process.Finish(c.Epoch, c.lockedCertificate, c.sentLockedCertificate)
 		}
 		//c.Process.Decide(c.Epoch, nil)
 		return
@@ -371,7 +380,7 @@ func (c *FastAlterBFT) processTimeoutQuitEpoch() {
 	if c.epochPhase == EpochChange {
 		c.epochPhase = Finished
 		fmt.Printf("Process %v epoch %v nolock+nodecision\n", c.Process.ID(), c.Epoch)
-		c.Process.Finish(c.Epoch, c.lockedCertificate)
+		c.Process.Finish(c.Epoch, c.lockedCertificate, c.sentLockedCertificate)
 	}
 }
 
