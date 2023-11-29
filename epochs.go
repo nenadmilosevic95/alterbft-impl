@@ -47,10 +47,10 @@ func (p *Process) CreateNewEpoch(epoch int64) consensus.Consensus {
 		return consensus.NewDeltaProtocol(epoch, p)
 	case "delta-chunk":
 		return consensus.NewDeltaChunkedProtocol(epoch, p, p.config.ChunksNumber)
-	case "slow":
+	case "silence":
 		if p.config.Byzantines[p.ID()] {
 			//return consensus.NewByzantineSyncConsensus(epoch, p, p.config.Byzantines, p.config.ByzTime, p.config.ByzAttack)
-			return consensus.NewAlterBFTSlowLeader()
+			return consensus.NewFastAlterBFTSilence(epoch, p, p.config.FastAlterEnabled)
 		} else {
 			return consensus.NewFastAlterBFT(epoch, p, p.config.FastAlterEnabled)
 		}
