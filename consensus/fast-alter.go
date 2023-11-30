@@ -257,6 +257,11 @@ func (c *FastAlterBFT) processBlockCertificate(cert *Certificate) {
 	if cert.RanksHigherOrEqual(c.lockedCertificate) {
 		c.lockedCertificate = cert
 		c.sentLockedCertificate = false
+		// check if this is the certificate the proposer was waiting for
+		if c.Process.ID() == c.Process.Proposer(c.Epoch) && c.scheduledTimeouts[TimeoutEpochChange] && c.lockedCertificate.Epoch == c.Epoch-1 {
+			c.scheduledTimeouts[TimeoutEpochChange] = false
+			c.broadcastProposal()
+		}
 	}
 	if cert.Epoch == c.Epoch {
 		if c.epochPhase == Ready {
@@ -385,8 +390,10 @@ func (c *FastAlterBFT) processTimeoutQuitEpoch() {
 }
 
 func (c *FastAlterBFT) processTimeoutEpochChange() {
-	c.scheduledTimeouts[TimeoutEpochChange] = false
-	c.broadcastProposal()
+	if c.scheduledTimeouts[TimeoutEpochChange] == true {
+		c.scheduledTimeouts[TimeoutEpochChange] = false
+		c.broadcastProposal()
+	}
 }
 
 func (c *FastAlterBFT) broadcastProposal() {
