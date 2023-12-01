@@ -323,7 +323,7 @@ func (c *FastAlterBFT) processQuitEpoch(quitEpoch *Message) {
 
 func (c *FastAlterBFT) processCertificate(certificate *Message) {
 	if c.Process.ID() != c.Process.Proposer(c.Epoch) {
-		panic(fmt.Errorf("Non proposer process received certificate message!"))
+		panic(fmt.Errorf("Non proposer %v process received certificate message in epoch %v!", c.Process.ID(), c.Epoch))
 	}
 	if certificate.Type == SILENCE_CERT {
 		panic(fmt.Errorf("Process received invalid certificate!"))
@@ -473,13 +473,13 @@ func (c *FastAlterBFT) broadcastQuitEpoch(certificate *Certificate) {
 }
 
 func (c *FastAlterBFT) sendCertificateToLeader() {
-	quitEpoch := &Message{
+	certMsg := &Message{
 		Type:        CERTIFICATE,
 		Epoch:       c.Epoch,
 		Certificate: c.lockedCertificate,
 		Sender:      c.Process.ID(),
 	}
-	c.Process.Send(quitEpoch, c.Process.Proposer(c.Epoch))
+	c.Process.Send(certMsg, c.Process.Proposer(c.Epoch))
 }
 
 // Schedule a timeout for the epoch phase, if not already scheduled.
