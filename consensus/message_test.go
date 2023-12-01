@@ -136,6 +136,13 @@ func TestMessageMarshalling(t *testing.T) {
 		t.Error(err)
 	}
 
+	m = NewCertificateMessage(MIN_EPOCH, bc)
+	m.Sign(keys[0])
+	err = testMarshalling(m)
+	if err != nil {
+		t.Error(err)
+	}
+
 	b = testRandValue(1024)
 	b[0] = 0
 	m = NewDeltaRequestMessage(b, 0)

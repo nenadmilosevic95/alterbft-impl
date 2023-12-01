@@ -13,6 +13,7 @@ const (
 	SILENCE
 	VOTE
 	QUIT_EPOCH
+	CERTIFICATE
 
 	DELTA_REQUEST
 	DELTA_RESPONSE
@@ -91,6 +92,14 @@ func NewQuitEpochMessage(e int64, c *Certificate) *Message {
 	}
 }
 
+func NewCertificateMessage(e int64, c *Certificate) *Message {
+	return &Message{
+		Type:        CERTIFICATE,
+		Epoch:       e,
+		Certificate: c,
+	}
+}
+
 func NewDeltaRequestMessage(payload []byte, sender int) *Message {
 	return &Message{
 		Type:    DELTA_REQUEST,
@@ -113,7 +122,7 @@ func MessageFromBytes(buffer []byte) *Message {
 	mType := int16(buffer[1])
 	var epoch int64
 	var height int64
-	if mType != QUIT_EPOCH && mType != DELTA_REQUEST && mType != DELTA_RESPONSE {
+	if mType != QUIT_EPOCH && mType != CERTIFICATE && mType != DELTA_REQUEST && mType != DELTA_RESPONSE {
 		epoch = int64(encoding.Uint64(buffer[2:]))
 	}
 	index := 10
@@ -159,12 +168,15 @@ func MessageFromBytes(buffer []byte) *Message {
 	case QUIT_EPOCH:
 		certificate = CertificateFromBytes(buffer[2:])
 		epoch = certificate.Epoch
+	case CERTIFICATE:
+		certificate = CertificateFromBytes(buffer[2:])
+		epoch = certificate.Epoch
 	case DELTA_REQUEST, DELTA_RESPONSE:
 		payload = buffer[2 : len(buffer)-2]
 		index = len(buffer) - 2
 	}
 	var sender int16
-	if mType != QUIT_EPOCH {
+	if mType != QUIT_EPOCH && mType != CERTIFICATE {
 		sender = int16(encoding.Uint16(buffer[index:]))
 		index += 2
 	}
@@ -174,7 +186,7 @@ func MessageFromBytes(buffer []byte) *Message {
 		index += 2
 	}
 	var signature Signature
-	if mType != QUIT_EPOCH && mType != DELTA_REQUEST && mType != DELTA_RESPONSE {
+	if mType != QUIT_EPOCH && mType != CERTIFICATE && mType != DELTA_REQUEST && mType != DELTA_RESPONSE {
 		signature = SignatureFromBytes(buffer[index:])
 	}
 
@@ -218,6 +230,8 @@ func (m *Message) ByteSize() int {
 		return 22 + BlockIDSize + 2*SignatureSize
 	case QUIT_EPOCH:
 		return 2 + m.Certificate.ByteSize()
+	case CERTIFICATE:
+		return 2 + m.Certificate.ByteSize()
 	case DELTA_REQUEST, DELTA_RESPONSE:
 		return 2 + len(m.payload) + 2
 	default:
@@ -254,7 +268,7 @@ func (m *Message) MarshallTo(buffer []byte) {
 	var n int
 	buffer[0] = MessageCode
 	buffer[1] = byte(m.Type) // 2 bytes
-	if m.Type != QUIT_EPOCH && m.Type != DELTA_REQUEST && m.Type != DELTA_RESPONSE {
+	if m.Type != QUIT_EPOCH && m.Type != CERTIFICATE && m.Type != DELTA_REQUEST && m.Type != DELTA_RESPONSE {
 		encoding.PutUint64(buffer[2:], uint64(m.Epoch))
 	}
 	index := 10
@@ -301,11 +315,13 @@ func (m *Message) MarshallTo(buffer []byte) {
 		m.payload = buffer[2:index]
 	case QUIT_EPOCH:
 		n = m.Certificate.MarshallTo(buffer[2:])
+	case CERTIFICATE:
+		n = m.Certificate.MarshallTo(buffer[2:])
 	case DELTA_REQUEST, DELTA_RESPONSE:
 		copy(buffer[2:], m.payload)
 		index = 2 + len(m.payload)
 	}
-	if m.Type != QUIT_EPOCH {
+	if m.Type != QUIT_EPOCH && m.Type != CERTIFICATE {
 		encoding.PutUint16(buffer[index:], uint16(m.Sender))
 		index += 2
 	}
@@ -318,7 +334,7 @@ func (m *Message) MarshallTo(buffer []byte) {
 // The message is first encoded into bytes, from which the signature is computed.
 // The computed signature bytes then becomes the suffix of the byte-encoded message.
 func (m *Message) Sign(key crypto.PrivateKey) {
-	if m.Type == QUIT_EPOCH || m.Type == DELTA_REQUEST || m.Type == DELTA_RESPONSE {
+	if m.Type == QUIT_EPOCH || m.Type == CERTIFICATE || m.Type == DELTA_REQUEST || m.Type == DELTA_RESPONSE {
 		return
 	}
 	message := m.Marshall() // [message bytes : message signature]

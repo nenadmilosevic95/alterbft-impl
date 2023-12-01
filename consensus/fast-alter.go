@@ -127,6 +127,8 @@ func (c *FastAlterBFT) ProcessMessage(message *Message) {
 		c.processVote(message)
 	case QUIT_EPOCH:
 		c.processQuitEpoch(message)
+	case CERTIFICATE:
+		c.processCertificate(message)
 	}
 }
 
@@ -257,11 +259,6 @@ func (c *FastAlterBFT) processBlockCertificate(cert *Certificate) {
 	if cert.RanksHigherOrEqual(c.lockedCertificate) {
 		c.lockedCertificate = cert
 		c.sentLockedCertificate = false
-		// check if this is the certificate the proposer was waiting for
-		if c.Process.ID() == c.Process.Proposer(c.Epoch) && c.scheduledTimeouts[TimeoutEpochChange] && c.lockedCertificate.Epoch == c.Epoch-1 {
-			c.scheduledTimeouts[TimeoutEpochChange] = false
-			c.broadcastProposal()
-		}
 	}
 	if cert.Epoch == c.Epoch {
 		if c.epochPhase == Ready {
@@ -321,6 +318,24 @@ func (c *FastAlterBFT) processQuitEpoch(quitEpoch *Message) {
 	messages := cert.ReconstructMessages(c.Process.Proposer(c.Epoch))
 	for _, m := range messages {
 		c.ProcessMessage(m)
+	}
+}
+
+func (c *FastAlterBFT) processCertificate(certificate *Message) {
+	if c.Process.ID() != c.Process.Proposer(c.Epoch) {
+		panic(fmt.Errorf("Non proposer process received certificate message!"))
+	}
+	if certificate.Type == SILENCE_CERT {
+		panic(fmt.Errorf("Process received invalid certificate!"))
+	}
+	cert := certificate.Certificate
+	if cert.RanksHigherOrEqual(c.lockedCertificate) {
+		c.lockedCertificate = cert
+		// check if this is the certificate the proposer was waiting for
+		if c.scheduledTimeouts[TimeoutEpochChange] && c.lockedCertificate.Epoch == c.Epoch-1 {
+			c.scheduledTimeouts[TimeoutEpochChange] = false
+			c.broadcastProposal()
+		}
 	}
 }
 
@@ -459,8 +474,8 @@ func (c *FastAlterBFT) broadcastQuitEpoch(certificate *Certificate) {
 
 func (c *FastAlterBFT) sendCertificateToLeader() {
 	quitEpoch := &Message{
-		Type:        QUIT_EPOCH,
-		Epoch:       c.lockedCertificate.Epoch,
+		Type:        CERTIFICATE,
+		Epoch:       c.Epoch,
 		Certificate: c.lockedCertificate,
 		Sender:      c.Process.ID(),
 	}
