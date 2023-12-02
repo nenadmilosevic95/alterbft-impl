@@ -170,7 +170,7 @@ func (c *FastAlterBFTSilence) tryToVote() {
 		c.processVote(proposerVote)
 		vote := NewVoteMessage(proposal.Epoch, proposal.Block.BlockID(), proposal.Block.Height, int16(c.Process.ID()), int16(proposal.Sender))
 		vote.Signature2 = proposal.Signature
-		c.Process.Broadcast(vote)
+		//c.Process.Broadcast(vote)
 		c.hasVoted = true
 		if proposal.Certificate.RanksHigherOrEqual(c.lockedCertificate) {
 			c.sentLockedCertificate = false
@@ -183,9 +183,9 @@ func (c *FastAlterBFTSilence) checkEquivocation() {
 	if len(c.Votes.certificates) < 2 {
 		return
 	}
-	proposerID := c.Process.Proposer(c.Epoch)
-	vote1 := c.Votes.certificates[0].ReconstructMessage(proposerID, proposerID)
-	vote2 := c.Votes.certificates[1].ReconstructMessage(proposerID, proposerID)
+	//proposerID := c.Process.Proposer(c.Epoch)
+	//vote1 := c.Votes.certificates[0].ReconstructMessage(proposerID, proposerID)
+	//vote2 := c.Votes.certificates[1].ReconstructMessage(proposerID, proposerID)
 
 	if c.epochPhase == Ready {
 		c.epochPhase = EpochChange
@@ -202,8 +202,8 @@ func (c *FastAlterBFTSilence) checkEquivocation() {
 		c.epochPhase = Finished
 	}
 
-	c.Process.Forward(vote1)
-	c.Process.Forward(vote2)
+	//c.Process.Forward(vote1)
+	//c.Process.Forward(vote2)
 
 }
 
