@@ -57,7 +57,7 @@ func (c *DeltaProtocol) processMessage(message *Message) {
 		m := NewDeltaResponseMessage(message.payload, c.Process.ID())
 		c.Process.Send(m, message.Sender)
 	case DELTA_RESPONSE:
-		duration := time.Now().Sub(c.timeStart).Milliseconds()
+		duration := time.Now().Sub(c.timeStart).Nanoseconds()
 		fmt.Printf("%v DeltaStat: Process %v (%v) received forwarded proposal from %v (%v) in %v ms\n", time.Now(), c.Process.ID(), c.Process.ID()%5, message.Sender, message.Sender%5, duration)
 		nextProcess := (message.Sender + 1) % c.Process.NumProcesses()
 		// Chech if it should start new round.
