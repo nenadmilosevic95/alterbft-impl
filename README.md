@@ -77,7 +77,7 @@ md5sum deliveries.*   # All checksums should be identical
 If you prefer to run without Docker or want to modify the code:
 
 ### Prerequisites
-- Go 1.16 or later
+- Go 1.16 to 1.18 (Note: Go 1.19+ has dependency compatibility issues)
 - Git
 
 ### Installation
@@ -247,7 +247,7 @@ To verify correct consensus:
 - Docker Compose: 1.29+
 
 ### Manual Build Requirements
-- Go: 1.16 or later
+- Go: 1.16 to 1.18 (Note: Go 1.19+ has dependency compatibility issues)
 - Git
 
 ## Troubleshooting
@@ -270,8 +270,19 @@ sudo chown -R $USER:$USER results/
 
 **Problem**: "command not found: go"
 ```bash
-# Solution: Install Go 1.16 or later
+# Solution: Install Go 1.16 to 1.18
 # See: https://golang.org/doc/install
+# Note: Use Go 1.18 or earlier due to dependency compatibility
+```
+
+**Problem**: Build fails with quic-go error on Go 1.19+
+```
+Error: "The version of quic-go you're using can't be built on Go 1.19 yet"
+```
+```bash
+# Solution: Use Go 1.18 or earlier
+# The project dependencies require Go 1.18 or earlier
+# Download Go 1.18 from: https://go.dev/dl/
 ```
 
 **Problem**: "cannot find package"

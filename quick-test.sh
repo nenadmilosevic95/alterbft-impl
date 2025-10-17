@@ -13,7 +13,8 @@ echo ""
 # Check if Go is installed
 if ! command -v go &> /dev/null; then
     echo "ERROR: Go is not installed."
-    echo "Please install Go 1.16 or later from https://golang.org/doc/install"
+    echo "Please install Go 1.16-1.18 from https://golang.org/doc/install"
+    echo "Note: Go 1.19+ has dependency compatibility issues"
     exit 1
 fi
 

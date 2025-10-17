@@ -71,7 +71,7 @@ elif command -v go &> /dev/null; then
     
 else
     echo "ERROR: Neither Docker nor Go is installed on this system."
-    echo "Please install either Docker or Go 1.16+ to run this demo."
+    echo "Please install either Docker or Go (1.16-1.18) to run this demo."
     exit 1
 fi
 

@@ -1,0 +1,29 @@
+# Git files
+.git
+.gitignore
+
+# Build artifacts
+bin/agent/agent
+bin/rendezvous/rendezvous
+bin/client/client
+bin/logs
+
+# Results and logs
+results/
+*.log
+
+# Documentation
+*.md
+!README.md
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
