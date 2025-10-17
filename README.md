@@ -31,16 +31,16 @@ This repository provides two key implementations written in Go:
 
 ### System Model
 
-AlterBFT operates under a **partial synchrony** model with a key distinction:
-- **Small messages** (votes, signatures) are assumed to be **timely** and delivered within known bounds
-- **Large messages** (proposed blocks with transaction data) can be **delayed arbitrarily**
+AlterBFT operates under a **hybrid synchrony** system model with a key distinction:
+- **Small messages** (votes, certificates) are assumed to be **timely** and delivered within known bounds
+- **Large messages** (proposed blocks with transaction data) can be **delayed arbitrarily** and are expected to be eventually timely
 
 This model reflects real-world networks where small control messages typically have predictable latency, while large data transfers may experience variable delays. See our paper for detailed analysis of this system model.
 
 **Components included:**
 
 - **AlterBFT protocol implementation**:
-  - Core consensus algorithm with fast-alter optimization
+  - Complete core consensus algorithm with fast-alter optimization
   - Byzantine fault tolerance with configurable Byzantine nodes
   - Agent nodes that participate in consensus
   
@@ -60,7 +60,7 @@ This model reflects real-world networks where small control messages typically h
 - Detailed logging and performance metrics
 - Easy-to-use Docker setup requiring no manual dependency management
 
-## Quick Start with Docker (Recommended)
+## Quick Start with Docker
 
 The easiest way to try AlterBFT is using Docker. Just run one command and see the consensus protocol in action!
 
@@ -170,14 +170,17 @@ You can run both AlterBFT consensus experiments and Delta latency measurements u
 
 **2. Byzantine nodes**:
 ```bash
-./run-demo.sh 4 -byz 1 -attack silence   # 1 Byzantine node with silence attack
-./run-demo.sh 7 -byz 2 -attack equiv     # 2 Byzantine nodes with equivocation attack
+./run-demo.sh 4 -byz 1 -mod silence   # 1 Byzantine node with silence attack
+./run-demo.sh 7 -byz 2 -mod equiv     # 2 Byzantine nodes with equivocation attack
 ```
 
-**3. Protocol and optimization options**:
+**3. Fast Alter optimization**:
+```bash            
+./run-demo.sh 4 -mod alter -fast    # AlterBFT with fast-alter optimization
+```
+**4. Custom timeouts**:
 ```bash
-./run-demo.sh 4 -mod alter              # AlterBFT consensus protocol (default)
-./run-demo.sh 4 -mod alter -fast true   # AlterBFT with fast-alter optimization
+./run-demo.sh 4 -s-delta 200 -b-delta 1500   # Small delta: 200ms, Big delta: 1500ms
 ```
 
 ### Delta Protocol (Latency Measurement)
@@ -188,12 +191,13 @@ To run the Delta protocol for measuring network latencies between machines:
 ./run-demo.sh 4 -mod delta              # Run Delta protocol to collect message delays
 ```
 
+```bash
+./run-demo.sh 4 -mod delta-chunk              # Run Delta protocol where each message is chunked in X small messages
+```
+
 The Delta protocol is used to characterize network behavior rather than reaching consensus. It measures how long messages take to travel between nodes.
 
-**4. Custom timeouts**:
-```bash
-./run-demo.sh 4 -s-delta 200 -b-delta 1500   # Small delta: 200ms, Big delta: 1500ms
-```
+
 
 ### Advanced Configuration
 
@@ -208,13 +212,11 @@ Key parameters:
 - `-n <N>`: Total number of nodes
 - `-i <ID>`: Node ID (0 to N-1)
 - `-byz <F>`: Number of Byzantine nodes
-- `-attack <TYPE>`: Byzantine behavior (silence, equiv)
-- `-s-delta <MS>`: Small delta timeout (milliseconds)
-- `-b-delta <MS>`: Big delta timeout (milliseconds)
+- `-s-delta <MS>`: Small delta timeout (milliseconds), used for small messages
+- `-b-delta <MS>`: Big delta timeout (milliseconds), used for large messages
 - `-maxEpoch <N>`: Number of consensus epochs to run
-- `-mod <MODEL>`: Consensus model (alter, fast-alter)
+- `-mod <MODEL>`: Consensus model (alter, delta, silence, equiv)
 - `-fast`: Enable FastAlter optimization
-- `-topology <TYPE>`: Network topology (full, gossip, star)
 
 ## Output and Results
 
@@ -242,12 +244,10 @@ Each node produces a log file `a.<node-id>` with detailed execution information 
 - **delta**: Delta protocol for measuring message delays between distributed nodes
   - Used for network characterization experiments
   - Not a consensus protocol, but a measurement tool
-
-### Byzantine Attacks (`-attack` parameter)
-
-When running with `-byz N` to specify N Byzantine nodes:
-- **silence**: Byzantine leaders remain silent (do not propose blocks)
-- **equiv**: Byzantine leaders send equivocating proposals (different proposals to different nodes) 
+- **alter with byzantine nodes**: Alter with Byzantine nodes
+   - When running with `-byz N` to specify N Byzantine nodes:
+   - **silence**: Byzantine leaders remain silent (do not propose blocks)
+   - **equiv**: Byzantine leaders send equivocating proposals (different proposals to different nodes) 
 
 
 ## Use Cases and Limitations
