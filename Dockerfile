@@ -19,23 +19,27 @@ RUN cd bin/client && go build -o client
 # Runtime stage - use Alpine 3.16 for better compatibility
 FROM alpine:3.16
 
+# Install bash for the test script
+RUN apk add --no-cache bash || true
+
 # Set working directory
-WORKDIR /app
+WORKDIR /app/bin
+
+# Create directory structure
+RUN mkdir -p agent rendezvous client logs
 
 # Copy binaries from builder
-COPY --from=builder /build/bin/agent/agent /app/bin/agent/agent
-COPY --from=builder /build/bin/rendezvous/rendezvous /app/bin/rendezvous/rendezvous
-COPY --from=builder /build/bin/client/client /app/bin/client/client
+COPY --from=builder /build/bin/agent/agent ./agent/agent
+COPY --from=builder /build/bin/rendezvous/rendezvous ./rendezvous/rendezvous
+COPY --from=builder /build/bin/client/client ./client/client
 
 # Copy scripts
-COPY bin/test.sh /app/bin/test.sh
-RUN chmod +x /app/bin/test.sh
+COPY --from=builder /build/bin/test.sh ./test.sh
+COPY --from=builder /build/bin/xcompile.sh ./xcompile.sh
+COPY --from=builder /build/bin/xclean.sh ./xclean.sh
 
-# Create logs directory
-RUN mkdir -p /app/bin/logs
-
-# Set working directory to bin
-WORKDIR /app/bin
+# Make scripts executable
+RUN chmod +x test.sh xcompile.sh xclean.sh 2>/dev/null || true
 
 # Default command
 CMD ["/bin/sh"]

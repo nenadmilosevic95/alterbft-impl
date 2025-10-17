@@ -5,7 +5,7 @@ services:
   consensus-test:
     build: .
     container_name: alterbft-test
-    command: /app/bin/test.sh 4
+    command: /bin/sh ./test.sh 4
     volumes:
       - ./results:/app/bin/logs
     networks:
