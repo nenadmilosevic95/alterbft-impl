@@ -1,6 +1,9 @@
 # AlterBFT: Byzantine Fault-Tolerant Consensus Algorithm Implementation
 
-This repository contains an open-source implementation of AlterBFT, a Byzantine fault-tolerant consensus protocol.
+This repository contains two main components:
+
+1. **AlterBFT**: A Byzantine fault-tolerant consensus protocol implementation
+2. **Delta Protocol**: A measurement tool for collecting message latencies between distributed machines
 
 > **📖 Open Source Research Code**
 > 
@@ -10,30 +13,52 @@ This repository contains an open-source implementation of AlterBFT, a Byzantine 
 
 ## Table of Contents
 - [Overview](#overview)
+  - [System Model](#system-model)
 - [Quick Start with Docker](#quick-start-with-docker)
 - [Manual Setup](#manual-setup)
 - [Running Experiments](#running-experiments)
 - [Output and Results](#output-and-results)
 - [Configuration Options](#configuration-options)
-- [System Requirements](#system-requirements)
 - [Use Cases and Limitations](#use-cases-and-limitations)
 
 ## Overview
 
-AlterBFT is a BFT consensus protocol implementation written in Go. This open-source implementation allows you to experiment with Byzantine consensus, run your own tests, and build upon the protocol.
+This repository provides two key implementations written in Go:
 
-**What's included:**
+1. **AlterBFT Protocol**: A Byzantine fault-tolerant consensus protocol that allows you to experiment with BFT consensus, run tests, and build upon the implementation.
 
-- **Agent nodes**: Consensus participants that propose and agree on blocks
-- **Rendezvous server**: A discovery service for peer-to-peer connectivity
-- **Docker setup**: Run experiments instantly without worrying about dependencies
+2. **Delta Protocol**: A measurement tool we used to collect network latencies between machines in our distributed experiments. This helps characterize real-world network delays for consensus protocol evaluation.
 
+### System Model
+
+AlterBFT operates under a **partial synchrony** model with a key distinction:
+- **Small messages** (votes, signatures) are assumed to be **timely** and delivered within known bounds
+- **Large messages** (proposed blocks with transaction data) can be **delayed arbitrarily**
+
+This model reflects real-world networks where small control messages typically have predictable latency, while large data transfers may experience variable delays. See our paper for detailed analysis of this system model.
+
+**Components included:**
+
+- **AlterBFT protocol implementation**:
+  - Core consensus algorithm with fast-alter optimization
+  - Byzantine fault tolerance with configurable Byzantine nodes
+  - Agent nodes that participate in consensus
+  
+- **Delta protocol implementation**:
+  - Measures message latencies between distributed machines
+  - Used for network characterization in our experiments
+  
+- **Infrastructure**:
+  - Rendezvous server for peer-to-peer discovery
+  - Performance monitoring and comprehensive logging
+  - Docker setup for easy local experimentation
+  
 **Key features:**
-- Byzantine fault tolerance with configurable number of Byzantine nodes
-- Complete AlterBFT implementation (alter, fast-alter)
-- Performance monitoring and comprehensive logging
+- Run either AlterBFT consensus or Delta measurement protocol
 - Highly configurable for different experimental scenarios
-- Easy-to-use Docker setup for quick experimentation
+- Support for Byzantine fault injection (silence, equivocation attacks)
+- Detailed logging and performance metrics
+- Easy-to-use Docker setup requiring no manual dependency management
 
 ## Quick Start with Docker (Recommended)
 
@@ -50,14 +75,14 @@ The easiest way to try AlterBFT is using Docker. Just run one command and see th
    cd alterbft-impl
    ```
 
-2. **Run the demonstration**:
+2. **Run the AlterBFT consensus demonstration**:
    ```bash
    ./run-demo.sh
    ```
 
    This will:
    - Build the Docker image
-   - Start 4 consensus nodes
+   - Start 4 consensus nodes running AlterBFT
    - Run 100 epochs of consensus
    - Store results in the `results/` directory
 
@@ -73,20 +98,20 @@ After the demo completes, you'll find the following in the `results/` directory:
 - `deliveries.0`, `deliveries.1`, etc.: Delivered blocks for each node (one block per line), each node prints block for height when it was the proposer
 - `a.0`, `a.1`, etc.: Detailed execution logs for each node
 
-## Manual Setup (Advanced)
+## Manual Setup (Without Docker)
 
-⚠️ **WARNING**: Manual setup requires Go 1.16-1.18. If you have Go 1.19+ installed, **use Docker instead** (recommended above) or downgrade Go to 1.18.
+**Note**: Manual setup can be problematic due to Go version dependencies. This codebase requires Go 1.16-1.18, but most modern systems have Go 1.19+ installed, which is incompatible with some of our dependencies (specifically `quic-go`). **We provide Docker to avoid these dependency issues** and ensure the code works consistently across different machines.
 
-Most systems now have Go 1.19+ by default, which is **incompatible** with this codebase due to dependency constraints. **We strongly recommend using Docker** unless you specifically need to modify the code.
+If you still want to build manually and have the correct Go version:
 
 ### Prerequisites
-- Go 1.16 to 1.18 (**NOT 1.19+**)
+- Go 1.16 to 1.18 (**NOT 1.19+** - incompatible dependencies)
 - Git
 
 ### Check Your Go Version
 ```bash
 go version
-# If you see go1.19 or higher, use Docker instead!
+# If you see go1.19 or higher, use Docker instead to avoid dependency issues
 ```
 
 ### Installation
@@ -132,9 +157,9 @@ go version
 
 ## Running Experiments
 
-All experiments can be run using `./run-demo.sh` with Docker (recommended).
+You can run both AlterBFT consensus experiments and Delta latency measurements using `./run-demo.sh` with Docker (recommended).
 
-### Basic Experiments
+### AlterBFT Consensus Experiments
 
 **1. Different system sizes**:
 ```bash
@@ -149,11 +174,21 @@ All experiments can be run using `./run-demo.sh` with Docker (recommended).
 ./run-demo.sh 7 -byz 2 -attack equiv     # 2 Byzantine nodes with equivocation attack
 ```
 
-**3. Optimizations**:
+**3. Protocol and optimization options**:
 ```bash
-./run-demo.sh 4 -mod alter              # Standard AlterBFT
-./run-demo.sh 4 -mod alter -fast true   # FastAlter optimization
+./run-demo.sh 4 -mod alter              # AlterBFT consensus protocol (default)
+./run-demo.sh 4 -mod alter -fast true   # AlterBFT with fast-alter optimization
 ```
+
+### Delta Protocol (Latency Measurement)
+
+To run the Delta protocol for measuring network latencies between machines:
+
+```bash
+./run-demo.sh 4 -mod delta              # Run Delta protocol to collect message delays
+```
+
+The Delta protocol is used to characterize network behavior rather than reaching consensus. It measures how long messages take to travel between nodes.
 
 **4. Custom timeouts**:
 ```bash
@@ -200,15 +235,19 @@ Each node produces a log file `a.<node-id>` with detailed execution information 
 
 ## Configuration Options
 
-### Consensus Models
+### Protocol Models (`-mod` parameter)
 
-- **alter**: Standard AlterBFT protocol
-- **fast-alter**: With FastAlter optimization
+- **alter**: AlterBFT consensus protocol (default)
+  - Use with `-fast true` for fast-alter optimization
+- **delta**: Delta protocol for measuring message delays between distributed nodes
+  - Used for network characterization experiments
+  - Not a consensus protocol, but a measurement tool
 
-### Byzantine Attacks
+### Byzantine Attacks (`-attack` parameter)
 
-- **silence**: Byzantine leaders remain silent
-- **equiv**: Byzantine leaders send equivocating proposals 
+When running with `-byz N` to specify N Byzantine nodes:
+- **silence**: Byzantine leaders remain silent (do not propose blocks)
+- **equiv**: Byzantine leaders send equivocating proposals (different proposals to different nodes) 
 
 
 ## Use Cases and Limitations
@@ -219,12 +258,21 @@ Each node produces a log file `a.<node-id>` with detailed execution information 
 - 🔧 **Build** your own consensus protocol variations
 - 📊 **Benchmark** different configurations and parameters
 - 🎓 **Teach** distributed systems and consensus concepts
+- 💻 **Run local tests** on your laptop with Docker
 
 **Important limitations:**
 - This is a **research prototype**, not production-ready software
 - Intended for **controlled experimental environments**
+- This repository contains code for **local testing** and experimentation
 
-If you're building a production system, treat this as a reference implementation and starting point, but plan for significant additional engineering, security auditing, and testing.
+**Large-scale distributed experiments:**
+
+The paper presents results from large-scale experiments on AWS EC2 instances. The orchestration scripts for deploying and running experiments across multiple EC2 instances are **not currently included in this repository** but may be added in the future. Those scripts essentially:
+- Upload compiled binaries to EC2 instances
+- Configure appropriate parameters for distributed settings
+- Coordinate experiment execution across nodes
+
+For now, this repository focuses on making the core protocol accessible for local experimentation and learning.
 
 ## Contributing
 
