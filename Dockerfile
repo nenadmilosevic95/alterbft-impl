@@ -34,12 +34,10 @@ COPY --from=builder /build/bin/rendezvous/rendezvous ./rendezvous/rendezvous
 COPY --from=builder /build/bin/client/client ./client/client
 
 # Copy scripts
-COPY --from=builder /build/bin/test.sh ./test.sh
-COPY --from=builder /build/bin/xcompile.sh ./xcompile.sh
-COPY --from=builder /build/bin/xclean.sh ./xclean.sh
+COPY --from=builder /build/bin/test-docker.sh ./test.sh
 
-# Make scripts executable
-RUN chmod +x test.sh xcompile.sh xclean.sh 2>/dev/null || true
+# Make script executable
+RUN chmod +x test.sh
 
 # Default command
 CMD ["/bin/sh"]

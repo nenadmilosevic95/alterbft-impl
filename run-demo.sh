@@ -32,7 +32,7 @@ if command -v docker &> /dev/null && command -v docker-compose &> /dev/null; the
     
     # Run with docker-compose
     docker-compose build
-    docker-compose run --rm consensus-test /app/bin/test.sh $N
+    docker-compose run --rm consensus-test ./test.sh $N
     
     echo ""
     echo "========================================"
