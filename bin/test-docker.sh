@@ -63,7 +63,7 @@ ID=0
 while [ "$ID" -lt "$((N-1))" ]
 do
 	echo -e "+Starting server agent p$ID in background"
-	$AGENT_DIR/agent -i $ID -n $N -dir $LOG_DIR $@ | tee $LOG_DIR/a.$ID &
+	$AGENT_DIR/agent -i $ID -n $N -dir $LOG_DIR $@ > $LOG_DIR/a.$ID 2>&1 &
 
 	ID=$((ID+1))
 done
@@ -71,7 +71,7 @@ done
 # 4. Start a server agent in foreground
 
 echo "+Starting server agent p$ID"
-$AGENT_DIR/agent -i $ID -n $N -dir $LOG_DIR $@ | tee $LOG_DIR/a.$ID
+$AGENT_DIR/agent -i $ID -n $N -dir $LOG_DIR $@ > $LOG_DIR/a.$ID 2>&1
 
 # 5. Kill rendezvous and wait for agents to finish
 
