@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  # 4-node consensus test
+  consensus-test:
+    build: .
+    container_name: alterbft-test
+    command: /app/bin/test.sh 4
+    volumes:
+      - ./results:/app/bin/logs
+    networks:
+      - alterbft-net
+
+networks:
+  alterbft-net:
+    driver: bridge
+
