@@ -70,17 +70,8 @@ The easiest way to try AlterBFT is using Docker. Just run one command and see th
 
 After the demo completes, you'll find the following in the `results/` directory:
 
-- `deliveries.0`, `deliveries.1`, etc.: Delivered blocks for each node (one block per line)
+- `deliveries.0`, `deliveries.1`, etc.: Delivered blocks for each node (one block per line), each node prints block for height when it was the proposer
 - `a.0`, `a.1`, etc.: Detailed execution logs for each node
-
-**Success criteria**: All nodes should deliver the same sequence of blocks. You can verify this by checking that all `deliveries.*` files have the same content.
-
-Example verification:
-```bash
-# Check that all nodes delivered the same blocks
-cd results
-md5sum deliveries.*   # All checksums should be identical
-```
 
 ## Manual Setup (Advanced)
 
@@ -120,7 +111,6 @@ go version
    This creates three binaries:
    - `bin/agent/agent`: Consensus node
    - `bin/rendezvous/rendezvous`: Discovery server
-   - `bin/client/client`: Workload generator
 
 ### Running Manually
 
@@ -159,7 +149,7 @@ All experiments can be run using `./run-demo.sh` with Docker (recommended).
 ./run-demo.sh 7 -byz 2 -attack equiv     # 2 Byzantine nodes with equivocation attack
 ```
 
-**3. Network models**:
+**3. Optimizations**:
 ```bash
 ./run-demo.sh 4 -mod alter              # Standard AlterBFT
 ./run-demo.sh 4 -mod alter -fast true   # FastAlter optimization
@@ -168,16 +158,6 @@ All experiments can be run using `./run-demo.sh` with Docker (recommended).
 **4. Custom timeouts**:
 ```bash
 ./run-demo.sh 4 -s-delta 200 -b-delta 1500   # Small delta: 200ms, Big delta: 1500ms
-```
-
-### Manual Mode (Advanced - Requires Go 1.16-1.18)
-
-If you're running without Docker and have Go 1.16-1.18 installed:
-
-```bash
-cd bin
-./test.sh 4 -byz 1 -attack silence
-./test.sh 7 -s-delta 200 -b-delta 1500
 ```
 
 ### Advanced Configuration
@@ -218,33 +198,7 @@ Each node produces a log file `a.<node-id>` with detailed execution information 
 - Message send/receive events
 - Performance statistics
 
-### Verification
-
-To verify correct consensus:
-
-1. **Check all nodes delivered blocks**:
-   ```bash
-   wc -l results/deliveries.*
-   ```
-   All files should have the same line count.
-
-2. **Verify agreement**:
-   ```bash
-   cd results
-   diff deliveries.0 deliveries.1   # Should show no differences
-   diff deliveries.0 deliveries.2   # Should show no differences
-   ```
-
-3. **Check for Byzantine tolerance** (when using `-byz`):
-   Even with Byzantine nodes, all honest nodes should agree on the same sequence.
-
 ## Configuration Options
-
-### Network Topologies
-
-- **full**: All-to-all connectivity (default)
-- **gossip**: Random gossip overlay (-k parameter sets neighbors)
-- **star**: Star topology with node 0 as hub
 
 ### Consensus Models
 
@@ -254,93 +208,8 @@ To verify correct consensus:
 ### Byzantine Attacks
 
 - **silence**: Byzantine leaders remain silent
-- **equiv**: Byzantine leaders send conflicting messages
+- **equiv**: Byzantine leaders send equivocating proposals 
 
-## System Requirements
-
-### Recommended Setup (Docker)
-- CPU: 2+ cores
-- RAM: 4+ GB
-- Disk: 1 GB free space
-- Docker Engine: 20.10+
-- Docker Compose: 1.29+
-
-### Alternative Setup (Manual Build) - Advanced Users Only
-- CPU: 2+ cores
-- RAM: 4+ GB
-- Disk: 1 GB free space
-- **Go: 1.16 to 1.18 (NOT 1.19+)** ⚠️
-- Git
-
-**Note**: Most modern systems have Go 1.19+ which is incompatible. Use Docker unless you specifically need to modify code.
-
-## Troubleshooting
-
-### Docker Issues
-
-**Problem**: Docker build fails with "go: module not found"
-```bash
-# Solution: Clean Docker cache and rebuild
-docker-compose build --no-cache
-```
-
-**Problem**: Permission denied on results directory
-```bash
-# Solution: Fix permissions
-sudo chown -R $USER:$USER results/
-```
-
-### Manual Build Issues
-
-**Problem**: "command not found: go"
-```bash
-# Solution: Install Go 1.16 to 1.18
-# See: https://golang.org/doc/install
-# Note: Use Go 1.18 or earlier due to dependency compatibility
-```
-
-**Problem**: Build fails with quic-go error on Go 1.19+
-```
-Error: "The version of quic-go you're using can't be built on Go 1.19 yet"
-```
-```bash
-# Solution: Use Go 1.18 or earlier
-# The project dependencies require Go 1.18 or earlier
-# Download Go 1.18 from: https://go.dev/dl/
-```
-
-**Problem**: "cannot find package"
-```bash
-# Solution: Download dependencies
-go mod download
-go mod tidy
-```
-
-### Runtime Issues
-
-**Problem**: Nodes can't find each other
-- Check that all nodes use the same rendezvous server
-- Verify network connectivity between nodes
-- Increase discovery timeout with longer initial wait
-
-**Problem**: Consensus stalls
-- Check logs for error messages
-- Verify all nodes have started successfully
-- Ensure sufficient time deltas for network conditions
-
-## Expected Performance
-
-On a modern laptop/workstation with Docker:
-
-- **4 nodes**: ~50-100 blocks in 100 epochs (~20-30 seconds)
-- **7 nodes**: ~40-80 blocks in 100 epochs (~30-40 seconds)
-- **10 nodes**: ~30-60 blocks in 100 epochs (~40-60 seconds)
-
-Actual performance depends on:
-- CPU speed and core count
-- Available memory
-- Network latency (especially important for distributed deployments)
-- Configured timeout values (s-delta, b-delta)
 
 ## Use Cases and Limitations
 
@@ -353,9 +222,7 @@ Actual performance depends on:
 
 **Important limitations:**
 - This is a **research prototype**, not production-ready software
-- Intended for **controlled experimental environments** and local testing
-- Optimized for **clarity and experimental flexibility** over production performance
-- Best suited for **trusted, controlled networks** (like your laptop or test cluster)
+- Intended for **controlled experimental environments**
 
 If you're building a production system, treat this as a reference implementation and starting point, but plan for significant additional engineering, security auditing, and testing.
 
@@ -383,7 +250,7 @@ If you use this code in your research or build upon it, please cite our paper:
 ## Contact
 
 Questions, suggestions, or want to discuss the implementation?
-[Your contact information]
+[nele.milosevic95@gmail.com]
 
 ## Acknowledgments
 
