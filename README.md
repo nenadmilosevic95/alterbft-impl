@@ -197,6 +197,8 @@ To run the Delta protocol for measuring network latencies between machines:
 
 The Delta protocol is used to characterize network behavior rather than reaching consensus. It measures how long messages take to travel between nodes.
 
+**Reading Delta results:** In the log files (`a.*`), lines containing `DeltaStat` contain the collected latency data between nodes.
+
 
 
 ### Advanced Configuration
