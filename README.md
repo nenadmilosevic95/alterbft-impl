@@ -283,18 +283,6 @@ We welcome contributions, improvements, and feedback! Feel free to:
 - 📖 Improve documentation
 - 💬 Share your experiments and results
 
-## Citation
-
-If you use this code in your research or build upon it, please cite our paper:
-
-```
-[Your paper citation here]
-```
-
-## License
-
-[Specify your license here]
-
 ## Contact
 
 Questions, suggestions, or want to discuss the implementation?
