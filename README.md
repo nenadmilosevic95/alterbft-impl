@@ -1,6 +1,12 @@
-# AlterBFT: Byzantine Consensus Implementation
+# AlterBFT: Byzantine Fault-Tolerant Consensus Algorithm Implementation
 
-This repository contains the implementation of AlterBFT, a Byzantine fault-tolerant consensus protocol. This artifact is provided for reproducibility and evaluation purposes.
+This repository contains an open-source implementation of AlterBFT, a Byzantine fault-tolerant consensus protocol.
+
+> **📖 Open Source Research Code**
+> 
+> This implementation is open-sourced to enable **experimentation, learning, and further research**. Feel free to use it, modify it, and build upon it for your own research or educational purposes. We provide an easy Docker-based setup so you can quickly run experiments on your local machine.
+>
+> **Note**: This is a research prototype. While it demonstrates the core protocol correctly, it is not production-ready. Use it for research, education, and experimentation.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -10,24 +16,28 @@ This repository contains the implementation of AlterBFT, a Byzantine fault-toler
 - [Output and Results](#output-and-results)
 - [Configuration Options](#configuration-options)
 - [System Requirements](#system-requirements)
+- [Use Cases and Limitations](#use-cases-and-limitations)
 
 ## Overview
 
-AlterBFT is a Byzantine consensus protocol implementation written in Go. The system consists of:
+AlterBFT is a BFT consensus protocol implementation written in Go. This open-source implementation allows you to experiment with Byzantine consensus, run your own tests, and build upon the protocol.
+
+**What's included:**
 
 - **Agent nodes**: Consensus participants that propose and agree on blocks
 - **Rendezvous server**: A discovery service for peer-to-peer connectivity
-- **Client**: A workload generator for performance testing
+- **Docker setup**: Run experiments instantly without worrying about dependencies
 
-Key features:
+**Key features:**
 - Byzantine fault tolerance with configurable number of Byzantine nodes
-- Configurable network topologies (full, gossip, star)
-- Support for different consensus models (alter, fast-alter)
-- Performance monitoring and logging
+- Complete AlterBFT implementation (alter, fast-alter)
+- Performance monitoring and comprehensive logging
+- Highly configurable for different experimental scenarios
+- Easy-to-use Docker setup for quick experimentation
 
-## Quick Start with Docker
+## Quick Start with Docker (Recommended)
 
-The easiest way to evaluate this artifact is using Docker. This method requires no Go installation or dependency management.
+The easiest way to try AlterBFT is using Docker. Just run one command and see the consensus protocol in action!
 
 ### Prerequisites
 - Docker (version 20.10 or later)
@@ -72,13 +82,21 @@ cd results
 md5sum deliveries.*   # All checksums should be identical
 ```
 
-## Manual Setup
+## Manual Setup (Advanced)
 
-If you prefer to run without Docker or want to modify the code:
+⚠️ **WARNING**: Manual setup requires Go 1.16-1.18. If you have Go 1.19+ installed, **use Docker instead** (recommended above) or downgrade Go to 1.18.
+
+Most systems now have Go 1.19+ by default, which is **incompatible** with this codebase due to dependency constraints. **We strongly recommend using Docker** unless you specifically need to modify the code.
 
 ### Prerequisites
-- Go 1.16 to 1.18 (Note: Go 1.19+ has dependency compatibility issues)
+- Go 1.16 to 1.18 (**NOT 1.19+**)
 - Git
+
+### Check Your Go Version
+```bash
+go version
+# If you see go1.19 or higher, use Docker instead!
+```
 
 ### Installation
 
@@ -124,6 +142,8 @@ If you prefer to run without Docker or want to modify the code:
 
 ## Running Experiments
 
+All experiments can be run using `./run-demo.sh` with Docker (recommended).
+
 ### Basic Experiments
 
 **1. Different system sizes**:
@@ -133,24 +153,31 @@ If you prefer to run without Docker or want to modify the code:
 ./run-demo.sh 10   # 10 nodes (f=3)
 ```
 
-**2. Byzantine nodes** (manual mode):
+**2. Byzantine nodes**:
 ```bash
-cd bin
-./test.sh 4 -byz 1 -attack silence   # 1 Byzantine node with silence attack
-./test.sh 7 -byz 2 -attack equiv     # 2 Byzantine nodes with equivocation attack
+./run-demo.sh 4 -byz 1 -attack silence   # 1 Byzantine node with silence attack
+./run-demo.sh 7 -byz 2 -attack equiv     # 2 Byzantine nodes with equivocation attack
 ```
 
 **3. Network models**:
 ```bash
-cd bin
-./test.sh 4 -mod alter              # Standard AlterBFT
-./test.sh 4 -mod alter -fast true   # FastAlter optimization
+./run-demo.sh 4 -mod alter              # Standard AlterBFT
+./run-demo.sh 4 -mod alter -fast true   # FastAlter optimization
 ```
 
 **4. Custom timeouts**:
 ```bash
+./run-demo.sh 4 -s-delta 200 -b-delta 1500   # Small delta: 200ms, Big delta: 1500ms
+```
+
+### Manual Mode (Advanced - Requires Go 1.16-1.18)
+
+If you're running without Docker and have Go 1.16-1.18 installed:
+
+```bash
 cd bin
-./test.sh 4 -s-delta 200 -b-delta 1500   # Small delta: 200ms, Big delta: 1500ms
+./test.sh 4 -byz 1 -attack silence
+./test.sh 7 -s-delta 200 -b-delta 1500
 ```
 
 ### Advanced Configuration
@@ -231,24 +258,21 @@ To verify correct consensus:
 
 ## System Requirements
 
-### Minimal Requirements
-- CPU: 2 cores
-- RAM: 4 GB
+### Recommended Setup (Docker)
+- CPU: 2+ cores
+- RAM: 4+ GB
 - Disk: 1 GB free space
-
-### Recommended for Performance Testing
-- CPU: 4+ cores
-- RAM: 8+ GB
-- Disk: 10+ GB free space
-- Network: Low-latency connections between nodes
-
-### Docker Requirements
 - Docker Engine: 20.10+
 - Docker Compose: 1.29+
 
-### Manual Build Requirements
-- Go: 1.16 to 1.18 (Note: Go 1.19+ has dependency compatibility issues)
+### Alternative Setup (Manual Build) - Advanced Users Only
+- CPU: 2+ cores
+- RAM: 4+ GB
+- Disk: 1 GB free space
+- **Go: 1.16 to 1.18 (NOT 1.19+)** ⚠️
 - Git
+
+**Note**: Most modern systems have Go 1.19+ which is incompatible. Use Docker unless you specifically need to modify code.
 
 ## Troubleshooting
 
@@ -318,9 +342,35 @@ Actual performance depends on:
 - Network latency (especially important for distributed deployments)
 - Configured timeout values (s-delta, b-delta)
 
+## Use Cases and Limitations
+
+**What you can do with this code:**
+- 🔬 **Experiment** with Byzantine consensus protocols
+- 📚 **Learn** how BFT consensus works in practice
+- 🔧 **Build** your own consensus protocol variations
+- 📊 **Benchmark** different configurations and parameters
+- 🎓 **Teach** distributed systems and consensus concepts
+
+**Important limitations:**
+- This is a **research prototype**, not production-ready software
+- Intended for **controlled experimental environments** and local testing
+- Optimized for **clarity and experimental flexibility** over production performance
+- Best suited for **trusted, controlled networks** (like your laptop or test cluster)
+
+If you're building a production system, treat this as a reference implementation and starting point, but plan for significant additional engineering, security auditing, and testing.
+
+## Contributing
+
+We welcome contributions, improvements, and feedback! Feel free to:
+- 🐛 Report bugs or issues
+- 💡 Suggest new features or optimizations
+- 🔀 Submit pull requests
+- 📖 Improve documentation
+- 💬 Share your experiments and results
+
 ## Citation
 
-If you use this artifact in your research, please cite:
+If you use this code in your research or build upon it, please cite our paper:
 
 ```
 [Your paper citation here]
@@ -332,7 +382,7 @@ If you use this artifact in your research, please cite:
 
 ## Contact
 
-For questions about this artifact, please contact:
+Questions, suggestions, or want to discuss the implementation?
 [Your contact information]
 
 ## Acknowledgments
