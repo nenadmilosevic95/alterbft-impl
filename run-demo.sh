@@ -12,13 +12,15 @@ echo ""
 
 # Default number of nodes
 N=${1:-4}
+shift 2>/dev/null || true
 
 echo "Configuration:"
 echo "  Number of nodes: $N"
-echo "  Model: alter (default)"
-echo "  Small delta: 150ms (default)"
-echo "  Big delta: 1000ms (default)"
-echo "  Max epochs: 100 (default)"
+if [ -z "$*" ]; then
+    echo "  Parameters: (defaults)"
+else
+    echo "  Parameters: $*"
+fi
 echo ""
 
 # Check if Docker is available
@@ -32,7 +34,7 @@ if command -v docker &> /dev/null && command -v docker-compose &> /dev/null; the
     
     # Run with docker-compose
     docker-compose build
-    docker-compose run --rm consensus-test ./test.sh $N
+    docker-compose run --rm consensus-test ./test.sh $N "$@"
     
     echo ""
     echo "========================================"
@@ -60,7 +62,7 @@ elif command -v go &> /dev/null; then
     echo ""
     
     cd bin
-    ./test.sh $N
+    ./test.sh $N "$@"
     
     echo ""
     echo "========================================"
